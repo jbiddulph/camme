@@ -150,7 +150,14 @@ func main() {
 	}
 	// Only scheme+host: a path on BACKEND_BASE_URL (e.g. .../api/v1) would otherwise join twice with /api/v1/...
 	proxyOrigin := &url.URL{Scheme: apiTarget.Scheme, Host: apiTarget.Host}
-	apiProxy := httputil.NewSingleHostReverseProxy(proxyOrigin)
+	// NewSingleHostReverseProxy does not rewrite the Host header; browsers send the web app's Host,
+	// so Heroku would route the outbound request to the wrong app and close with EOF. Use Rewrite + SetURL.
+	apiProxy := &httputil.ReverseProxy{
+		Rewrite: func(pr *httputil.ProxyRequest) {
+			pr.SetURL(proxyOrigin)
+			pr.SetXForwarded()
+		},
+	}
 	apiProxy.ErrorHandler = func(w http.ResponseWriter, r *http.Request, err error) {
 		log.Printf("api proxy error: %v", err)
 		w.Header().Set("Content-Type", "application/json")
