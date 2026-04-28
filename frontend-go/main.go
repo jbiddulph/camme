@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"html/template"
@@ -155,9 +156,15 @@ func main() {
 	apiProxy := &httputil.ReverseProxy{
 		Rewrite: func(pr *httputil.ProxyRequest) {
 			pr.SetURL(proxyOrigin)
+			// SetURL clears Host; ensure the API vhost is explicit (Heroku routes by Host).
+			pr.Out.Host = proxyOrigin.Host
 			pr.SetXForwarded()
 		},
 	}
+	// Outbound HTTP/2 to some edge setups can yield EOF; HTTP/1.1 is reliable for server-side proxy hops.
+	apiTransport := http.DefaultTransport.(*http.Transport).Clone()
+	apiTransport.TLSNextProto = make(map[string]func(string, *tls.Conn) http.RoundTripper)
+	apiProxy.Transport = apiTransport
 	apiProxy.ErrorHandler = func(w http.ResponseWriter, r *http.Request, err error) {
 		log.Printf("api proxy error: %v", err)
 		w.Header().Set("Content-Type", "application/json")
