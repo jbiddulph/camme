@@ -43,11 +43,14 @@ class BroadcastStartResponse(BaseModel):
     viewer_token: str
     livekit_url: str
     livekit_ws_url: str
+    visibility: str = 'public'
+    private_share_url: str | None = None
 
 
 class BroadcastHeartbeatRequest(BaseModel):
     room_name: str = Field(min_length=3, max_length=80)
     thumbnail_data_url: str | None = Field(default=None, max_length=2_000_000)
+    viewer_count: int | None = Field(default=None, ge=0, le=100000)
 
 
 class BroadcastLiveItem(BaseModel):
@@ -55,6 +58,7 @@ class BroadcastLiveItem(BaseModel):
     display_name: str
     thumbnail_data_url: str | None = None
     last_heartbeat_iso: str
+    viewer_count: int = 0
 
 
 class ReportRequest(BaseModel):

@@ -221,6 +221,42 @@ func main() {
 		http.Redirect(w, r, "/live?"+q.Encode(), http.StatusFound)
 	})
 
+	mux.HandleFunc("/watch/private", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+		share := strings.TrimSpace(r.URL.Query().Get("share"))
+		if share == "" {
+			http.Error(w, "missing share query param", http.StatusBadRequest)
+			return
+		}
+		base := strings.TrimSuffix(backendURL, "/")
+		apiURL := base + apiPrefix + "/broadcast/private-viewer-token?share=" + url.QueryEscape(share)
+		resp, err := http.Post(apiURL, "application/json", bytes.NewBufferString("{}"))
+		if err != nil {
+			http.Error(w, "could not reach API", http.StatusBadGateway)
+			return
+		}
+		defer resp.Body.Close()
+		if resp.StatusCode != http.StatusOK {
+			body, _ := io.ReadAll(resp.Body)
+			http.Error(w, string(body), resp.StatusCode)
+			return
+		}
+		var payload viewerTokenPayload
+		if err := json.NewDecoder(resp.Body).Decode(&payload); err != nil {
+			http.Error(w, "invalid API response", http.StatusBadGateway)
+			return
+		}
+		q := url.Values{}
+		q.Set("room", payload.RoomName)
+		q.Set("token", payload.ViewerToken)
+		q.Set("livekit", payload.LivekitWsURL)
+		q.Set("mode", "watch")
+		http.Redirect(w, r, "/live?"+q.Encode(), http.StatusFound)
+	})
+
 	mux.HandleFunc("/live", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
 			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)

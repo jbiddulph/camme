@@ -22,7 +22,13 @@ from app.api.schemas import (
 )
 from app.core.config import settings
 from app.core.livekit_urls import http_to_ws_url
-from app.core.security import create_access_token, hash_password, verify_password
+from app.core.security import (
+    create_access_token,
+    create_private_share_token,
+    decode_private_share_token,
+    hash_password,
+    verify_password,
+)
 from app.db.session import get_db
 from app.models.room import Room
 from app.models.user import User
@@ -31,6 +37,7 @@ from app.services.livekit_service import issue_room_token
 from app.services.report_service import persist_report
 
 router = APIRouter()
+STREAM_META: dict[str, dict] = {}
 
 
 def _sanitize_room_suffix(value: str) -> str:
@@ -177,6 +184,7 @@ def issue_viewer_token(room_name: str, db: Session = Depends(get_db)) -> ViewerT
 
 @router.post('/broadcast/start', response_model=BroadcastStartResponse)
 def start_broadcast(
+    visibility: str = Query(default='public'),
     authorization: str | None = Header(default=None, alias='Authorization'),
     db: Session = Depends(get_db),
 ) -> BroadcastStartResponse:
@@ -196,6 +204,10 @@ def start_broadcast(
     host_token = issue_room_token(identity=f'host:{room.name}', room_name=room.name, can_publish=True)
     viewer_token = issue_room_token(identity=f'viewer:{room.name}', room_name=room.name, can_publish=False)
     ws_url = http_to_ws_url(settings.livekit_url)
+    selected_visibility = 'private' if visibility.strip().lower() == 'private' else 'public'
+    private_share_url: str | None = None
+    if selected_visibility == 'private':
+        private_share_url = f'/watch/private?share={create_private_share_token(room.name)}'
 
     presence = db.scalar(select(BroadcastPresence).where(BroadcastPresence.user_id == user.id))
     if not presence:
@@ -213,6 +225,11 @@ def start_broadcast(
         presence.is_live = True
         presence.last_heartbeat_at = datetime.now(timezone.utc)
     db.commit()
+    STREAM_META[room.name] = {
+        'visibility': selected_visibility,
+        'viewer_count': STREAM_META.get(room.name, {}).get('viewer_count', 0),
+        'private_share_url': private_share_url,
+    }
 
     return BroadcastStartResponse(
         room_name=room.name,
@@ -221,6 +238,8 @@ def start_broadcast(
         viewer_token=viewer_token,
         livekit_url=settings.livekit_url,
         livekit_ws_url=ws_url,
+        visibility=selected_visibility,
+        private_share_url=private_share_url,
     )
 
 
@@ -250,6 +269,12 @@ def heartbeat_broadcast(
     if payload.thumbnail_data_url:
         presence.thumbnail_data_url = payload.thumbnail_data_url
     presence.last_heartbeat_at = datetime.now(timezone.utc)
+    meta = STREAM_META.get(payload.room_name, {})
+    if payload.viewer_count is not None:
+        meta['viewer_count'] = payload.viewer_count
+    if 'visibility' not in meta:
+        meta['visibility'] = 'public'
+    STREAM_META[payload.room_name] = meta
     db.commit()
     return {'status': 'ok'}
 
@@ -267,6 +292,10 @@ def stop_broadcast(
         presence.is_live = False
         presence.last_heartbeat_at = datetime.now(timezone.utc)
         db.commit()
+    meta = STREAM_META.get(room)
+    if meta:
+        meta['viewer_count'] = 0
+        STREAM_META[room] = meta
     return {'status': 'ok'}
 
 
@@ -285,10 +314,23 @@ def list_live_broadcasts(db: Session = Depends(get_db)) -> dict:
             display_name=row.display_name,
             thumbnail_data_url=row.thumbnail_data_url,
             last_heartbeat_iso=row.last_heartbeat_at.isoformat(),
+            viewer_count=int(STREAM_META.get(row.room_name, {}).get('viewer_count', 0)),
         ).model_dump()
         for row in rows
+        if STREAM_META.get(row.room_name, {}).get('visibility', 'public') == 'public'
     ]
     return {'items': items}
+
+
+@router.post('/broadcast/private-viewer-token', response_model=ViewerTokenResponse)
+def private_viewer_token(
+    share: str = Query(..., min_length=20),
+    db: Session = Depends(get_db),
+) -> ViewerTokenResponse:
+    room = decode_private_share_token(share)
+    if not room:
+        raise HTTPException(status_code=401, detail='Invalid or expired private link')
+    return _mint_viewer_token(room, db)
 
 
 @router.post('/reports')

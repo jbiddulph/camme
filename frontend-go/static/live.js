@@ -6,6 +6,7 @@
   const mode = (params.get('mode') || 'watch').toLowerCase();
 
   const statusEl = document.getElementById('liveStatus');
+  const viewerCountEl = document.getElementById('viewerCount');
   const errorEl = document.getElementById('liveError');
   const diagEl = document.getElementById('liveDiag');
   const gridEl = document.getElementById('videoGrid');
@@ -27,6 +28,7 @@
   /** @type {MediaStream | null} */
   let rawStream = null;
   let heartbeatTimer = null;
+  let lastViewerCount = 0;
 
   function jwtPayload(jwt) {
     const parts = String(jwt).split('.');
@@ -116,6 +118,18 @@
 
   function setStatus(text) {
     statusEl.textContent = text;
+  }
+
+  function computeViewerCount() {
+    const participants = [room.localParticipant, ...Array.from(room.remoteParticipants.values())];
+    const viewerParticipants = participants.filter((p) => p && !String(p.identity || '').startsWith('host:'));
+    return viewerParticipants.length;
+  }
+
+  function updateViewerCountUI() {
+    const count = computeViewerCount();
+    lastViewerCount = count;
+    if (viewerCountEl) viewerCountEl.textContent = `Viewers: ${count}`;
   }
 
   if (step2Wrap) step2Wrap.hidden = !wantsPublish;
@@ -348,6 +362,12 @@
     .on(LK.RoomEvent.LocalTrackPublished, (pub) => {
       if (pub.track) attachTrack(pub.track, room.localParticipant);
     })
+    .on(LK.RoomEvent.ParticipantConnected, () => {
+      updateViewerCountUI();
+    })
+    .on(LK.RoomEvent.ParticipantDisconnected, () => {
+      updateViewerCountUI();
+    })
     .on(LK.RoomEvent.MediaDevicesError, (err) => {
       console.error('LiveKit MediaDevicesError', err);
       let detail = err && err.message ? err.message : String(err);
@@ -362,6 +382,7 @@
     })
     .on(LK.RoomEvent.Disconnected, () => {
       setStatus('Left room');
+      updateViewerCountUI();
       btnToggleMic.hidden = true;
       btnToggleCam.hidden = true;
       if (btnStartBroadcast) btnStartBroadcast.disabled = true;
@@ -486,6 +507,7 @@
       } else {
         setStatus('Connected · watching (viewer)');
       }
+      updateViewerCountUI();
 
       if (!wantsPublish) {
         room.localParticipant.videoTrackPublications.forEach((pub) => {
@@ -535,6 +557,7 @@
       body: JSON.stringify({
         room_name: roomName,
         thumbnail_data_url: thumbnail,
+        viewer_count: lastViewerCount,
       }),
     });
   }
@@ -544,7 +567,7 @@
     sendBroadcastHeartbeat().catch((err) => console.warn('heartbeat failed', err));
     heartbeatTimer = setInterval(() => {
       sendBroadcastHeartbeat().catch((err) => console.warn('heartbeat failed', err));
-    }, 5 * 60 * 1000);
+    }, 60 * 1000);
   }
 
   function stopBroadcastHeartbeat() {

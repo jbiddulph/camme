@@ -10,17 +10,22 @@ body {
 }
 
 .container {
-  max-width: 840px;
+  max-width: 1600px;
   margin: 0 auto;
-  padding: 2rem 1rem;
+  padding: 1.25rem 1.5rem 2rem;
+}
+
+.full-width {
+  width: 100%;
 }
 
 .card {
   background: #161b22;
   border: 1px solid #30363d;
   border-radius: 12px;
-  padding: 1rem;
+  padding: 1.1rem;
   margin-bottom: 1rem;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
 }
 
 input {
@@ -37,9 +42,14 @@ button {
   background: #7c3aed;
   border: 0;
   border-radius: 8px;
-  padding: 0.6rem 1rem;
+  padding: 0.65rem 1rem;
   color: #fff;
   cursor: pointer;
+  font-weight: 600;
+}
+
+button.secondary {
+  background: #374151;
 }
 
 .error {
@@ -75,4 +85,24 @@ pre {
 .room-name {
   font-weight: 600;
   color: #e5e7eb;
+}
+
+.actions-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-bottom: 0.8rem;
+}
+
+.broadcaster-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 0.9rem;
+}
+
+.broadcaster-card {
+  border: 1px solid #30363d;
+  border-radius: 10px;
+  padding: 0.6rem;
+  background: #0d1117;
 }
