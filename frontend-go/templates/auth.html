@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Camme — Sign in</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <link rel="stylesheet" href="/static/auth.css">
+</head>
+<body>
+  <main class="container auth-page">
+    <p><a href="/">← Home</a></p>
+    <h1>Account</h1>
+    <p class="hint">Requests go to this site’s API prefix (proxied to FastAPI). Token is stored in <code>localStorage</code> as <code>camme_access_token</code>.</p>
+    <section class="card">
+      <h2>Session</h2>
+      <p id="authState" class="hint">Checking login state…</p>
+      <button type="button" id="btnLogout" hidden>Log out</button>
+    </section>
+
+    <section class="card">
+      <h2>Register</h2>
+      <form id="formRegister">
+        <input name="username" placeholder="username" required minlength="3" autocomplete="username" />
+        <input name="email" type="email" placeholder="email" required autocomplete="email" />
+        <input name="password" type="password" placeholder="password (min 8)" required minlength="8" autocomplete="new-password" />
+        <button type="submit">Create account</button>
+      </form>
+      <pre id="outRegister" class="auth-out"></pre>
+    </section>
+
+    <section class="card">
+      <h2>Log in</h2>
+      <form id="formLogin">
+        <input name="email" type="email" placeholder="email" required autocomplete="username" />
+        <input name="password" type="password" placeholder="password" required autocomplete="current-password" />
+        <button type="submit">Log in</button>
+      </form>
+      <pre id="outLogin" class="auth-out"></pre>
+    </section>
+
+    <p class="hint">API docs: <a id="docsLink" href="#" target="_blank" rel="noopener">OpenAPI</a></p>
+  </main>
+  <script>
+    const API_BASE = {{jsString .APIPrefix}};
+    document.getElementById('docsLink').href = {{jsString .BackendURL}} + '/docs';
+    const TOKEN_KEY = 'camme_access_token';
+    const authStateEl = document.getElementById('authState');
+    const btnLogout = document.getElementById('btnLogout');
+
+    function renderAuthState() {
+      const token = localStorage.getItem(TOKEN_KEY);
+      if (token) {
+        authStateEl.textContent = 'Logged in (token is saved locally).';
+        btnLogout.hidden = false;
+      } else {
+        authStateEl.textContent = 'Not logged in.';
+        btnLogout.hidden = true;
+      }
+    }
+
+    btnLogout.addEventListener('click', () => {
+      localStorage.removeItem(TOKEN_KEY);
+      renderAuthState();
+    });
+
+    async function postAuth(path, body, outEl) {
+      outEl.textContent = '…';
+      const res = await fetch(API_BASE + path, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      const text = await res.text();
+      let data;
+      try { data = JSON.parse(text); } catch { data = text; }
+      outEl.textContent = JSON.stringify(data, null, 2);
+      if (res.ok && data && data.access_token) {
+        localStorage.setItem(TOKEN_KEY, data.access_token);
+        renderAuthState();
+        outEl.textContent += '\n\n(saved to localStorage as camme_access_token)';
+        window.location.assign('/?logged_in=1');
+      }
+    }
+
+    document.getElementById('formRegister').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const fd = new FormData(e.target);
+      await postAuth('/auth/register', {
+        username: fd.get('username'),
+        email: fd.get('email'),
+        password: fd.get('password'),
+      }, document.getElementById('outRegister'));
+    });
+
+    document.getElementById('formLogin').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const fd = new FormData(e.target);
+      await postAuth('/auth/login', {
+        email: fd.get('email'),
+        password: fd.get('password'),
+      }, document.getElementById('outLogin'));
+    });
+
+    renderAuthState();
+  </script>
+</body>
+</html>

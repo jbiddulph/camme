@@ -1,0 +1,153 @@
+.live-wrap {
+  max-width: 1100px;
+}
+
+.live-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem 1.25rem;
+  margin-bottom: 1rem;
+}
+
+.live-header h1 {
+  margin: 0;
+  font-size: 1.35rem;
+}
+
+.muted {
+  color: #9ca3af;
+  margin: 0;
+  flex: 1 1 auto;
+}
+
+.live-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.link-home {
+  color: #a78bfa;
+  text-decoration: none;
+  margin-right: 0.25rem;
+}
+
+.link-home:hover {
+  text-decoration: underline;
+}
+
+button.secondary {
+  background: #374151;
+}
+
+button.danger {
+  background: #b91c1c;
+}
+
+.video-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1rem;
+}
+
+.video-tile {
+  position: relative;
+  background: #0d1117;
+  border: 1px solid #30363d;
+  border-radius: 12px;
+  overflow: hidden;
+  aspect-ratio: 16 / 10;
+}
+
+/* Fill the tile: nested wrapper had no height, so video height:100% collapsed to 0 */
+.video-media {
+  position: absolute;
+  inset: 0;
+}
+
+.video-media video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  background: #000;
+}
+
+.gate-title {
+  margin: 0 0 0.75rem;
+  font-size: 1.1rem;
+}
+
+.gate-steps {
+  margin: 0;
+  padding-left: 1.25rem;
+  color: #d1d5db;
+}
+
+.gate-steps li {
+  margin-bottom: 1.25rem;
+}
+
+.gate-steps li:last-child {
+  margin-bottom: 0;
+}
+
+.raw-wrap {
+  margin-top: 0.75rem;
+}
+
+.raw-wrap video {
+  width: 100%;
+  max-width: 420px;
+  max-height: 280px;
+  border-radius: 8px;
+  border: 1px solid #30363d;
+  background: #000;
+  display: block;
+}
+
+.broadcast-gate {
+  background: #161b22;
+  border: 1px solid #7c3aed;
+  border-radius: 12px;
+  padding: 1rem 1.25rem;
+  margin-bottom: 1.25rem;
+}
+
+.broadcast-gate p {
+  margin: 0 0 1rem;
+  color: #d1d5db;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.live-diag {
+  font-size: 0.75rem;
+  color: #9ca3af;
+  background: #0d1117;
+  border: 1px solid #30363d;
+  border-radius: 8px;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+button.primary {
+  background: #7c3aed;
+  font-size: 1rem;
+  padding: 0.75rem 1.25rem;
+}
+
+.video-label {
+  position: absolute;
+  left: 0.5rem;
+  bottom: 0.5rem;
+  z-index: 1;
+  padding: 0.2rem 0.5rem;
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.65);
+  font-size: 0.75rem;
+}

@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta http-equiv="Permissions-Policy" content="camera=(self), microphone=(self)">
+  <title>Camme — Live</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <link rel="stylesheet" href="/static/live.css">
+</head>
+<body>
+  <main class="container live-wrap">
+    <header class="live-header">
+      <h1>Live room</h1>
+      <p id="liveStatus" class="muted">Connecting…</p>
+      <div class="live-actions">
+        <a class="link-home" href="/">← Home</a>
+        <button type="button" id="btnToggleMic" class="secondary" hidden>Mute mic</button>
+        <button type="button" id="btnToggleCam" class="secondary" hidden>Stop camera</button>
+        <button type="button" id="btnLeave" class="danger">Leave</button>
+      </div>
+    </header>
+    <p id="liveError" class="error" hidden></p>
+    <pre id="liveDiag" class="live-diag" hidden></pre>
+    <section id="broadcastPanel" class="broadcast-gate">
+      <h2 class="gate-title">Camera check &amp; broadcast</h2>
+      <ol class="gate-steps">
+        <li>
+          <p><strong>Step 1 — Browser test</strong> (always try this first). Uses your camera/mic directly — not LiveKit.</p>
+          <button type="button" id="btnRawMedia" class="primary">Test camera &amp; microphone</button>
+          <p id="rawStatus" class="hint"></p>
+          <div id="rawWrap" class="raw-wrap" hidden>
+            <video id="rawPreview" playsinline muted autoplay></video>
+            <p class="hint">
+              Green light / live picture = access works. <strong>No popup</strong> often means this origin is already <strong>Allow</strong>.
+              Black screen = blocked device, wrong browser, or OS privacy (macOS → Privacy → Camera).
+            </p>
+          </div>
+        </li>
+        <li id="step2Wrap">
+          <p><strong>Step 2 — Publish to room</strong> (host only, after status shows Connected):</p>
+          <button type="button" id="btnStartBroadcast" class="primary" disabled>Go live (LiveKit)</button>
+        </li>
+      </ol>
+    </section>
+    <div id="videoGrid" class="video-grid"></div>
+  </main>
+  <script>window.CAMME_API_BASE = {{jsString .APIPrefix}};</script>
+  <script src="https://cdn.jsdelivr.net/npm/livekit-client@2.18.6/dist/livekit-client.umd.min.js"></script>
+  <script src="/static/live.js"></script>
+</body>
+</html>

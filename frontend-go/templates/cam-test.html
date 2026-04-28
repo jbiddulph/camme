@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta http-equiv="Permissions-Policy" content="camera=(self), microphone=(self)">
+  <title>Camme — Camera test</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <style>
+    .box { max-width: 560px; margin: 2rem auto; padding: 1rem; }
+    video { width: 100%; max-height: 360px; background: #000; border-radius: 8px; border: 1px solid #30363d; }
+    #log { font-size: 0.8rem; color: #9ca3af; white-space: pre-wrap; margin-top: 1rem; }
+    .ok { color: #86efac; }
+    .bad { color: #fca5a5; }
+  </style>
+</head>
+<body>
+  <main class="container box">
+    <h1>Camera test</h1>
+    <p>No LiveKit — only your browser. If this fails, fix OS/browser permissions before using /live.</p>
+    <p><a href="/">← Home</a></p>
+    <button type="button" id="go" class="primary" style="margin: 1rem 0;">Start camera</button>
+    <video id="v" playsinline muted autoplay></video>
+    <p id="log"></p>
+  </main>
+  <script>
+    const logEl = document.getElementById('log');
+    function log(msg, cls) {
+      const line = document.createElement('div');
+      if (cls) line.className = cls;
+      line.textContent = new Date().toISOString().slice(11, 19) + ' ' + msg;
+      logEl.appendChild(line);
+    }
+    document.getElementById('go').onclick = async () => {
+      logEl.innerHTML = '';
+      log('hostname=' + location.hostname + ' secureContext=' + window.isSecureContext);
+      if (!navigator.mediaDevices?.getUserMedia) {
+        log('getUserMedia missing — use Chrome/Safari in a normal window at http://localhost:8080', 'bad');
+        return;
+      }
+      log('Requesting camera…');
+      try {
+        const s = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+        const vt = s.getVideoTracks().length;
+        const at = s.getAudioTracks().length;
+        log('OK: ' + vt + ' video, ' + at + ' audio tracks', 'ok');
+        const v = document.getElementById('v');
+        v.srcObject = s;
+        await v.play();
+        log('Playing preview. Green camera LED should be on.', 'ok');
+      } catch (e) {
+        log('FAILED: ' + e.name + ' — ' + e.message, 'bad');
+      }
+    };
+  </script>
+</body>
+</html>

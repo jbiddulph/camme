@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Camme</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <main class="container">
+    <h1>Camme</h1>
+    <p>Social cam + chat starter app</p>
+    <p class="hint"><a href="/auth">Sign in / Register</a> · Trouble with the camera? Try <a href="/cam-test">/cam-test</a> first (no LiveKit).</p>
+    <p id="homeAuthState" class="hint"></p>
+
+    <section class="card">
+      <h2>Broadcast</h2>
+      <p class="hint">Logged-in users can start broadcasting directly (no manual room creation).</p>
+      <button id="btnStartBroadcast" type="button">Start Broadcast</button>
+      <pre id="broadcastResult"></pre>
+    </section>
+
+    <section class="card">
+      <h2>Live broadcasters</h2>
+      <p class="hint">Preview snapshots refresh every 5 minutes while hosts are live.</p>
+      <div id="liveBroadcasters"></div>
+    </section>
+
+    <section class="card">
+      <h2>Live rooms</h2>
+      <p class="hint">Rooms stay listed here; anyone can <strong>Watch live</strong> again with a fresh viewer token.</p>
+      {{if .Error}}
+      <p class="error">{{.Error}}</p>
+      {{end}}
+      <ul>
+        {{range .Rooms}}
+          <li><span class="room-name">{{.Name}}</span> — <a href="{{.WatchURL}}">Watch live</a></li>
+        {{else}}
+          <li>No rooms yet</li>
+        {{end}}
+      </ul>
+    </section>
+  </main>
+  <script>window.CAMME_API_BASE = {{jsString .APIPrefix}};</script>
+  <script src="/static/app.js"></script>
+</body>
+</html>

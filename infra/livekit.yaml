@@ -1,0 +1,16 @@
+# Local dev: browser on the host, LiveKit in Docker.
+# use_external_ip:true often makes the SFU advertise a Docker/NAT IP the browser cannot use for UDP media.
+# node_ip forces ICE to advertise loopback so WebRTC works on the same machine.
+port: 7880
+bind_addresses:
+  - "0.0.0.0"
+rtc:
+  tcp_port: 7881
+  port_range_start: 50100
+  port_range_end: 50200
+  use_external_ip: false
+  node_ip: 127.0.0.1
+redis:
+  address: redis:6379
+keys:
+  devkey: secret

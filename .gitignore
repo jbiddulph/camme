@@ -1,0 +1,9 @@
+.env
+backend/.venv/
+__pycache__/
+*.pyc
+frontend-go/frontend
+frontend-go/.env
+frontend-go/.env.example
+backend/.env
+backend/.env.example
