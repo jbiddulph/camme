@@ -106,8 +106,25 @@ func fetchRooms(backendURL, apiPrefix string) ([]string, error) {
 	return payload.Rooms, nil
 }
 
+func validateBackendURLForHeroku(backend string) {
+	if os.Getenv("DYNO") == "" {
+		return
+	}
+	b := strings.ToLower(backend)
+	if strings.Contains(b, "localhost") || strings.Contains(b, "127.0.0.1") || strings.Contains(b, "::1") {
+		log.Fatal(
+			"Heroku: BACKEND_BASE_URL must be your FastAPI app URL (https://…herokuapp.com), not localhost. " +
+				"Run: heroku config:set BACKEND_BASE_URL=https://<camme-api>.herokuapp.com -a camme-web",
+		)
+	}
+	if !strings.HasPrefix(b, "https://") {
+		log.Printf("warning: BACKEND_BASE_URL should use https:// on Heroku (got %q)", backend)
+	}
+}
+
 func main() {
 	backendURL := trimSurroundingQuotes(envOrDefault("BACKEND_BASE_URL", "http://localhost:8000"))
+	validateBackendURLForHeroku(backendURL)
 	apiPrefix := normalizeAPIPrefix(envOrDefault("API_PREFIX", "/api/v1"))
 	port := envOrDefault("PORT", "8080")
 

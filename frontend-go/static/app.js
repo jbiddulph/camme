@@ -107,7 +107,24 @@ async function loadLiveBroadcasters() {
   if (!liveBroadcasters) return;
   liveBroadcasters.textContent = 'Loading…';
   const response = await fetch(`${API_BASE}/broadcast/live`);
-  const payload = await response.json();
+  const ct = response.headers.get('content-type') || '';
+  const text = await response.text();
+  let payload = {};
+  if (ct.includes('application/json')) {
+    try {
+      payload = JSON.parse(text);
+    } catch (_) {
+      liveBroadcasters.innerHTML =
+        '<p class="error">Live list API returned invalid JSON. Check Heroku <code>BACKEND_BASE_URL</code> and API logs.</p>';
+      return;
+    }
+  } else {
+    liveBroadcasters.innerHTML =
+      '<p class="error">Live list got HTML instead of JSON (status ' +
+        response.status +
+        '). On Heroku, set <strong>BACKEND_BASE_URL</strong> on the <strong>web</strong> app to your API URL, e.g. <code>https://camme-api-….herokuapp.com</code>, then <code>heroku ps:restart -a camme-web</code>.</p>';
+    return;
+  }
   const items = Array.isArray(payload.items) ? payload.items : [];
   if (!items.length) {
     liveBroadcasters.innerHTML = '<p class="hint">No one live right now.</p>';
