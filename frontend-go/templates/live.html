@@ -4,11 +4,14 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta http-equiv="Permissions-Policy" content="camera=(self), microphone=(self)">
-  <title>Camme — Live</title>
+  <title>Live</title>
   <link rel="stylesheet" href="/static/style.css">
   <link rel="stylesheet" href="/static/live.css">
 </head>
 <body>
+  <header class="site-header">
+    <a href="/" class="site-brand" aria-label="Home"><img src="/static/exhibitionist.png" alt="" class="site-logo" width="280" height="52" decoding="async" /></a>
+  </header>
   <main class="container live-wrap">
     <header class="live-header">
       <h1>Live room</h1>
@@ -51,10 +54,10 @@
       </div>
       <aside class="chat-panel">
         <h2>Live chat</h2>
-        <p id="chatHint" class="hint">Only logged-in users can post.</p>
+        <p id="chatHint" class="hint">Signed-in users post with their name. Guests post as Viewer1, Viewer2, … (no account needed).</p>
         <div id="chatMessages" class="chat-messages" aria-live="polite"></div>
         <form id="chatForm" class="chat-form">
-          <input id="chatInput" type="text" maxlength="2000" placeholder="Write a message..." />
+          <input id="chatInput" type="text" maxlength="2000" placeholder="Write a message…" autocomplete="off" autocorrect="on" enterkeyhint="send" />
           <button type="submit" class="primary">Send</button>
         </form>
         <h3>In room</h3>
@@ -69,7 +72,7 @@
         </div>
         <p>Step 1 tests camera/microphone in your browser. Step 2 starts publishing to the room.</p>
         <p>If camera fails: allow browser permissions, close apps using camera, and check OS privacy settings.</p>
-        <p>Chat messages persist for this room. Only logged-in users can send messages.</p>
+        <p>Chat persists for this room. Signed-in users use their username; guests use Viewer1, Viewer2, … automatically.</p>
         <h3>Diagnostics</h3>
         <pre id="liveDiag" class="live-diag" hidden></pre>
       </div>

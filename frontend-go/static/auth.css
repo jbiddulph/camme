@@ -1,10 +1,86 @@
 .auth-page {
-  max-width: 520px;
+  max-width: 720px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
-.auth-page code {
-  font-size: 0.85em;
-  color: #a78bfa;
+.auth-page *,
+.auth-page *::before,
+.auth-page *::after {
+  box-sizing: border-box;
+}
+
+.auth-forms-card {
+  width: 100%;
+  max-width: 100%;
+}
+
+.auth-panel {
+  display: none;
+}
+
+.auth-panel.is-active {
+  display: block;
+}
+
+.auth-tabs {
+  display: flex;
+  gap: 0;
+  margin: 0 0 1rem;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid #30363d;
+}
+
+.auth-tab {
+  flex: 1;
+  margin: 0;
+  border-radius: 0;
+  background: #0d1117;
+  color: #9ca3af;
+  font-weight: 600;
+  padding: 0.75rem 1rem;
+  border: 0;
+  border-right: 1px solid #30363d;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.auth-tab:last-child {
+  border-right: 0;
+}
+
+.auth-tab.is-active {
+  background: #7c3aed;
+  color: #fff;
+}
+
+.auth-panel-title {
+  margin: 0 0 0.75rem;
+  font-size: 1.05rem;
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  width: 100%;
+}
+
+.auth-form input {
+  width: 100%;
+  max-width: 100%;
+  margin-bottom: 0.65rem;
+  font-size: 16px;
+  min-height: 44px;
+}
+
+.auth-submit {
+  width: 100%;
+  margin-top: 0.25rem;
+  min-height: 44px;
+  font-size: 1rem;
+  touch-action: manipulation;
 }
 
 .auth-out {
@@ -12,4 +88,15 @@
   font-size: 0.8rem;
   max-height: 200px;
   overflow: auto;
+}
+
+.auth-page code {
+  font-size: 0.85em;
+  color: #a78bfa;
+}
+
+@media (min-width: 900px) {
+  .auth-page {
+    max-width: 560px;
+  }
 }

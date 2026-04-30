@@ -379,20 +379,31 @@ def create_chat_message(
     authorization: str | None = Header(default=None, alias='Authorization'),
     db: Session = Depends(get_db),
 ) -> ChatMessageItem:
-    user = _current_user_from_auth(authorization, db, required=True)
-    assert user is not None
     room = db.scalar(select(Room).where(Room.name == payload.room_name))
     if not room:
         raise HTTPException(status_code=404, detail='Room not found')
     body = payload.body.strip()
     if not body:
         raise HTTPException(status_code=400, detail='Message cannot be empty')
-    row = ChatMessage(
-        room_name=payload.room_name,
-        user_id=user.id,
-        display_name=user.username,
-        body=body,
-    )
+
+    user = _current_user_from_auth(authorization, db, required=False)
+    if user:
+        row = ChatMessage(
+            room_name=payload.room_name,
+            user_id=user.id,
+            display_name=user.username,
+            body=body,
+        )
+    else:
+        label = (payload.viewer_display_name or '').strip()
+        if len(label) < 2:
+            raise HTTPException(status_code=401, detail='Sign in or send viewer_display_name for guest chat')
+        row = ChatMessage(
+            room_name=payload.room_name,
+            user_id=None,
+            display_name=label[:80],
+            body=body,
+        )
     db.add(row)
     db.commit()
     db.refresh(row)

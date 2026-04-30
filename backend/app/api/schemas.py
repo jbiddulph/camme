@@ -70,12 +70,14 @@ class ReportRequest(BaseModel):
 class ChatMessageCreateRequest(BaseModel):
     room_name: str = Field(min_length=3, max_length=80)
     body: str = Field(min_length=1, max_length=2000)
+    # When not logged in, viewers send their on-screen label (e.g. Viewer1).
+    viewer_display_name: str | None = Field(default=None, max_length=80)
 
 
 class ChatMessageItem(BaseModel):
     id: int
     room_name: str
-    user_id: int
+    user_id: int | None
     display_name: str
     body: str
     created_at_iso: str

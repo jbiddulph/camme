@@ -147,29 +147,6 @@
     postBroadcastStatus.textContent = text;
   }
 
-  function participantDisplayName(participant) {
-    const id = String(participant.identity || 'participant');
-    if (id.startsWith('host:')) return 'Broadcaster';
-    if (id.startsWith('viewer:')) return 'Viewer';
-    return id;
-  }
-
-  function renderParticipants() {
-    if (!participantListEl) return;
-    const list = [room.localParticipant, ...Array.from(room.remoteParticipants.values())]
-      .filter(Boolean)
-      .map((p) => ({
-        sid: p.sid,
-        label: p.isLocal ? `You (${participantDisplayName(p)})` : participantDisplayName(p),
-      }));
-    participantListEl.innerHTML = '';
-    list.forEach((item) => {
-      const li = document.createElement('li');
-      li.textContent = item.label;
-      participantListEl.appendChild(li);
-    });
-  }
-
   function formatTime(iso) {
     const d = new Date(iso);
     if (Number.isNaN(d.getTime())) return '';
@@ -422,13 +399,76 @@
     audioCaptureDefaults: { echoCancellation: true, noiseSuppression: true },
   });
 
+  /** @type {Map<string, string>} */
+  let viewerLabelBySid = new Map();
+
+  function viewerJoinedAt(p) {
+    try {
+      if (p.joinedAt && typeof p.joinedAt.getTime === 'function') return p.joinedAt.getTime();
+    } catch (_) {
+      /* ignore */
+    }
+    return 0;
+  }
+
+  function refreshViewerLabels() {
+    const viewers = [];
+    for (const p of [room.localParticipant, ...room.remoteParticipants.values()]) {
+      if (!p) continue;
+      const id = String(p.identity || '');
+      if (!id.startsWith('viewer:')) continue;
+      viewers.push({ p, t: viewerJoinedAt(p), id });
+    }
+    viewers.sort((a, b) => a.t - b.t || a.id.localeCompare(b.id));
+    const map = new Map();
+    viewers.forEach((v, i) => map.set(v.p.sid, `Viewer${i + 1}`));
+    viewerLabelBySid = map;
+  }
+
+  function participantLabel(participant) {
+    const id = String(participant.identity || 'participant');
+    if (id.startsWith('host:')) {
+      return participant.isLocal ? 'You (Broadcaster)' : 'Broadcaster';
+    }
+    if (id.startsWith('viewer:')) {
+      const tag = viewerLabelBySid.get(participant.sid) || 'Viewer';
+      return participant.isLocal ? `You (${tag})` : tag;
+    }
+    return participant.isLocal ? `You (${id})` : id;
+  }
+
+  function renderParticipants() {
+    if (!participantListEl) return;
+    refreshViewerLabels();
+    const list = [room.localParticipant, ...Array.from(room.remoteParticipants.values())]
+      .filter(Boolean)
+      .map((p) => ({
+        sid: p.sid,
+        label: participantLabel(p),
+      }));
+    participantListEl.innerHTML = '';
+    list.forEach((item) => {
+      const li = document.createElement('li');
+      li.textContent = item.label;
+      participantListEl.appendChild(li);
+    });
+  }
+
+  function guestChatDisplayName() {
+    refreshViewerLabels();
+    const lp = room.localParticipant;
+    const id = String(lp.identity || '');
+    if (id.startsWith('host:')) return 'Broadcaster';
+    if (id.startsWith('viewer:')) return viewerLabelBySid.get(lp.sid) || 'Viewer';
+    return 'Guest';
+  }
+
   /** @type {Map<string, HTMLElement>} */
   const tiles = new Map();
 
   function labelForParticipant(participant) {
-    const id = participant.identity || 'participant';
-    if (participant.isLocal) return `You (${id})`;
-    return id;
+    refreshViewerLabels();
+    return participantLabel(participant);
   }
 
   function videoTileKey(participant) {
@@ -805,20 +845,26 @@
   if (chatForm && chatInput) {
     chatForm.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const token = localStorage.getItem(TOKEN_KEY);
-      if (!token) {
-        if (chatHint) chatHint.textContent = 'Sign in on /auth to send messages.';
-        return;
-      }
       const body = chatInput.value.trim();
       if (!body) return;
+      const token = localStorage.getItem(TOKEN_KEY);
+      const payload = { room_name: roomName, body };
+      /** @type {Record<string, string>} */
+      const headers = { 'Content-Type': 'application/json' };
+      if (token) {
+        Object.assign(headers, getAuthHeaders());
+      } else {
+        const guestName = guestChatDisplayName();
+        if (!guestName || guestName === 'Guest') {
+          if (chatHint) chatHint.textContent = 'Reconnect to the room to chat as a viewer.';
+          return;
+        }
+        payload.viewer_display_name = guestName;
+      }
       const res = await fetch(`${API_BASE}/chat/messages`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...getAuthHeaders(),
-        },
-        body: JSON.stringify({ room_name: roomName, body }),
+        headers,
+        body: JSON.stringify(payload),
       });
       if (!res.ok) {
         if (chatHint) chatHint.textContent = 'Could not send message.';
@@ -828,7 +874,11 @@
       renderChatMessage(item);
       lastChatId = Math.max(lastChatId, Number(item.id || 0));
       chatInput.value = '';
-      if (chatHint) chatHint.textContent = 'Only logged-in users can post.';
+      if (chatHint) {
+        chatHint.textContent = token
+          ? 'Signed-in: messages use your username.'
+          : 'Guest: messages use your viewer label (Viewer1, Viewer2, …).';
+      }
     });
   }
 

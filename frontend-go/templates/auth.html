@@ -3,40 +3,51 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Camme — Sign in</title>
+  <title>Login</title>
   <link rel="stylesheet" href="/static/style.css">
   <link rel="stylesheet" href="/static/auth.css">
 </head>
 <body>
+  <header class="site-header">
+    <a href="/" class="site-brand" aria-label="Home"><img src="/static/exhibitionist.png" alt="" class="site-logo" width="280" height="52" decoding="async" /></a>
+  </header>
   <main class="container auth-page">
     <p><a href="/">← Home</a></p>
-    <h1>Account</h1>
-    <p class="hint">Requests go to this site’s API prefix (proxied to FastAPI). Token is stored in <code>localStorage</code> as <code>camme_access_token</code>.</p>
+    <h1>Login or sign up</h1>
+    <p class="hint">API calls use this site’s <code>/api</code> prefix (proxied to FastAPI). Tokens are stored in <code>localStorage</code> as <code>camme_access_token</code>.</p>
+
     <section class="card">
       <h2>Session</h2>
       <p id="authState" class="hint">Checking login state…</p>
       <button type="button" id="btnLogout" hidden>Log out</button>
     </section>
 
-    <section class="card">
-      <h2>Register</h2>
-      <form id="formRegister">
-        <input name="username" placeholder="username" required minlength="3" autocomplete="username" />
-        <input name="email" type="email" placeholder="email" required autocomplete="email" />
-        <input name="password" type="password" placeholder="password (min 8)" required minlength="8" autocomplete="new-password" />
-        <button type="submit">Create account</button>
-      </form>
-      <pre id="outRegister" class="auth-out"></pre>
-    </section>
+    <section class="card auth-forms-card">
+      <div class="auth-tabs" role="tablist" aria-label="Login or sign up">
+        <button type="button" class="auth-tab is-active" id="tabLogin" role="tab" aria-selected="true" aria-controls="panelLogin" tabindex="0">Login</button>
+        <button type="button" class="auth-tab" id="tabRegister" role="tab" aria-selected="false" aria-controls="panelRegister" tabindex="-1">Sign up</button>
+      </div>
 
-    <section class="card">
-      <h2>Log in</h2>
-      <form id="formLogin">
-        <input name="email" type="email" placeholder="email" required autocomplete="username" />
-        <input name="password" type="password" placeholder="password" required autocomplete="current-password" />
-        <button type="submit">Log in</button>
-      </form>
-      <pre id="outLogin" class="auth-out"></pre>
+      <div id="panelLogin" class="auth-panel is-active" role="tabpanel" aria-labelledby="tabLogin" aria-hidden="false">
+        <h2 class="auth-panel-title visually-hidden">Login</h2>
+        <form id="formLogin" class="auth-form">
+          <input name="email" type="email" placeholder="Email" required autocomplete="username" />
+          <input name="password" type="password" placeholder="Password" required autocomplete="current-password" />
+          <button type="submit" class="primary auth-submit">Login</button>
+        </form>
+        <pre id="outLogin" class="auth-out"></pre>
+      </div>
+
+      <div id="panelRegister" class="auth-panel" role="tabpanel" aria-labelledby="tabRegister" aria-hidden="true">
+        <h2 class="auth-panel-title visually-hidden">Sign up</h2>
+        <form id="formRegister" class="auth-form">
+          <input name="username" placeholder="Username" required minlength="3" autocomplete="username" />
+          <input name="email" type="email" placeholder="Email" required autocomplete="email" />
+          <input name="password" type="password" placeholder="Password (min 8)" required minlength="8" autocomplete="new-password" />
+          <button type="submit" class="primary auth-submit">Create account</button>
+        </form>
+        <pre id="outRegister" class="auth-out"></pre>
+      </div>
     </section>
 
     <p class="hint">API docs: <a id="docsLink" href="#" target="_blank" rel="noopener">OpenAPI</a></p>
@@ -47,6 +58,39 @@
     const TOKEN_KEY = 'camme_access_token';
     const authStateEl = document.getElementById('authState');
     const btnLogout = document.getElementById('btnLogout');
+    const tabLogin = document.getElementById('tabLogin');
+    const tabRegister = document.getElementById('tabRegister');
+    const panelLogin = document.getElementById('panelLogin');
+    const panelRegister = document.getElementById('panelRegister');
+
+    function setAuthTab(register) {
+      if (register) {
+        tabRegister.classList.add('is-active');
+        tabLogin.classList.remove('is-active');
+        tabRegister.setAttribute('aria-selected', 'true');
+        tabLogin.setAttribute('aria-selected', 'false');
+        tabRegister.setAttribute('tabindex', '0');
+        tabLogin.setAttribute('tabindex', '-1');
+        panelRegister.classList.add('is-active');
+        panelLogin.classList.remove('is-active');
+        panelRegister.setAttribute('aria-hidden', 'false');
+        panelLogin.setAttribute('aria-hidden', 'true');
+      } else {
+        tabLogin.classList.add('is-active');
+        tabRegister.classList.remove('is-active');
+        tabLogin.setAttribute('aria-selected', 'true');
+        tabRegister.setAttribute('aria-selected', 'false');
+        tabLogin.setAttribute('tabindex', '0');
+        tabRegister.setAttribute('tabindex', '-1');
+        panelLogin.classList.add('is-active');
+        panelRegister.classList.remove('is-active');
+        panelLogin.setAttribute('aria-hidden', 'false');
+        panelRegister.setAttribute('aria-hidden', 'true');
+      }
+    }
+
+    tabLogin.addEventListener('click', () => setAuthTab(false));
+    tabRegister.addEventListener('click', () => setAuthTab(true));
 
     function renderAuthState() {
       const token = localStorage.getItem(TOKEN_KEY);
@@ -102,6 +146,7 @@
       }, document.getElementById('outLogin'));
     });
 
+    setAuthTab(false);
     renderAuthState();
   </script>
 </body>

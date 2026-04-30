@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"crypto/tls"
+	_ "embed" // required for //go:embed
 	"encoding/json"
 	"fmt"
 	"html/template"
@@ -14,6 +15,9 @@ import (
 	"os"
 	"strings"
 )
+
+//go:embed static/exhibitionist.png
+var embeddedExhibitionistPNG []byte
 
 type RoomResponse struct {
 	Rooms []string `json:"rooms"`
@@ -140,6 +144,11 @@ func main() {
 	}).ParseGlob("templates/*.html"))
 	mux := http.NewServeMux()
 
+	mux.HandleFunc("/static/exhibitionist.png", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "image/png")
+		w.Header().Set("Cache-Control", "public, max-age=86400")
+		_, _ = w.Write(embeddedExhibitionistPNG)
+	})
 	mux.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
 
 	apiTarget, err := url.Parse(backendURL)
