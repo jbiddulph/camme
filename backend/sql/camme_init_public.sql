@@ -44,3 +44,16 @@ CREATE TABLE IF NOT EXISTS camme_broadcast_presence (
     CONSTRAINT uq_camme_broadcast_presence_room_name UNIQUE (room_name),
     CONSTRAINT uq_camme_broadcast_presence_user_id UNIQUE (user_id)
 );
+
+CREATE TABLE IF NOT EXISTS camme_chat_messages (
+    id SERIAL PRIMARY KEY,
+    room_name VARCHAR(80) NOT NULL,
+    user_id INTEGER NOT NULL REFERENCES camme_users (id),
+    display_name VARCHAR(80) NOT NULL,
+    body TEXT NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS ix_camme_chat_messages_room_name ON camme_chat_messages (room_name);
+CREATE INDEX IF NOT EXISTS ix_camme_chat_messages_user_id ON camme_chat_messages (user_id);
+CREATE INDEX IF NOT EXISTS ix_camme_chat_messages_created_at ON camme_chat_messages (created_at);

@@ -4,12 +4,14 @@ import re
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Header
 from jose import JWTError, jwt
-from sqlalchemy import select
+from sqlalchemy import delete, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.api.schemas import (
     AuthResponse,
+    ChatMessageCreateRequest,
+    ChatMessageItem,
     CreateRoomRequest,
     CreateRoomResponse,
     BroadcastHeartbeatRequest,
@@ -33,6 +35,7 @@ from app.db.session import get_db
 from app.models.room import Room
 from app.models.user import User
 from app.models.broadcast_presence import BroadcastPresence
+from app.models.chat_message import ChatMessage
 from app.services.livekit_service import issue_room_token
 from app.services.report_service import persist_report
 
@@ -342,3 +345,78 @@ def submit_report(payload: ReportRequest, db: Session = Depends(get_db)) -> dict
         reason=payload.reason,
     )
     return {'status': 'queued'}
+
+
+@router.get('/chat/messages')
+def list_chat_messages(
+    room: str = Query(..., min_length=3, max_length=80),
+    limit: int = Query(default=100, ge=1, le=500),
+    db: Session = Depends(get_db),
+) -> dict:
+    rows = db.scalars(
+        select(ChatMessage)
+        .where(ChatMessage.room_name == room)
+        .order_by(ChatMessage.created_at.desc())
+        .limit(limit)
+    ).all()
+    items = [
+        ChatMessageItem(
+            id=row.id,
+            room_name=row.room_name,
+            user_id=row.user_id,
+            display_name=row.display_name,
+            body=row.body,
+            created_at_iso=row.created_at.isoformat(),
+        ).model_dump()
+        for row in reversed(rows)
+    ]
+    return {'items': items}
+
+
+@router.post('/chat/messages', response_model=ChatMessageItem)
+def create_chat_message(
+    payload: ChatMessageCreateRequest,
+    authorization: str | None = Header(default=None, alias='Authorization'),
+    db: Session = Depends(get_db),
+) -> ChatMessageItem:
+    user = _current_user_from_auth(authorization, db, required=True)
+    assert user is not None
+    room = db.scalar(select(Room).where(Room.name == payload.room_name))
+    if not room:
+        raise HTTPException(status_code=404, detail='Room not found')
+    body = payload.body.strip()
+    if not body:
+        raise HTTPException(status_code=400, detail='Message cannot be empty')
+    row = ChatMessage(
+        room_name=payload.room_name,
+        user_id=user.id,
+        display_name=user.username,
+        body=body,
+    )
+    db.add(row)
+    db.commit()
+    db.refresh(row)
+    return ChatMessageItem(
+        id=row.id,
+        room_name=row.room_name,
+        user_id=row.user_id,
+        display_name=row.display_name,
+        body=row.body,
+        created_at_iso=row.created_at.isoformat(),
+    )
+
+
+@router.post('/chat/messages/delete-all')
+def delete_all_chat_messages(
+    room: str = Query(..., min_length=3, max_length=80),
+    authorization: str | None = Header(default=None, alias='Authorization'),
+    db: Session = Depends(get_db),
+) -> dict:
+    user = _current_user_from_auth(authorization, db, required=True)
+    assert user is not None
+    room_row = db.scalar(select(Room).where(Room.name == room))
+    if not room_row or room_row.created_by_id != user.id:
+        raise HTTPException(status_code=403, detail='Only the broadcaster can delete this room chat')
+    deleted = db.execute(delete(ChatMessage).where(ChatMessage.room_name == room)).rowcount or 0
+    db.commit()
+    return {'status': 'ok', 'deleted': int(deleted)}

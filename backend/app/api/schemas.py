@@ -65,3 +65,17 @@ class ReportRequest(BaseModel):
     room_name: str
     reported_user: str
     reason: str = Field(min_length=5, max_length=500)
+
+
+class ChatMessageCreateRequest(BaseModel):
+    room_name: str = Field(min_length=3, max_length=80)
+    body: str = Field(min_length=1, max_length=2000)
+
+
+class ChatMessageItem(BaseModel):
+    id: int
+    room_name: str
+    user_id: int
+    display_name: str
+    body: str
+    created_at_iso: str

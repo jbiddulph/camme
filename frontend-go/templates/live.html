@@ -14,7 +14,9 @@
       <h1>Live room</h1>
       <p id="liveStatus" class="muted">Connecting…</p>
       <p id="viewerCount" class="muted">Viewers: 0</p>
+      <span id="liveBadge" class="live-badge" hidden>Broadcasting Live</span>
       <div class="live-actions">
+        <button type="button" id="btnHelp" class="secondary" aria-label="Open help">?</button>
         <a class="link-home" href="/">← Home</a>
         <button type="button" id="btnToggleMic" class="secondary" hidden>Mute mic</button>
         <button type="button" id="btnToggleCam" class="secondary" hidden>Stop camera</button>
@@ -22,7 +24,6 @@
       </div>
     </header>
     <p id="liveError" class="error" hidden></p>
-    <pre id="liveDiag" class="live-diag" hidden></pre>
     <section id="broadcastPanel" class="broadcast-gate">
       <h2 class="gate-title">Camera check &amp; broadcast</h2>
       <ol class="gate-steps">
@@ -44,7 +45,49 @@
         </li>
       </ol>
     </section>
-    <div id="videoGrid" class="video-grid"></div>
+    <section class="live-main">
+      <div class="live-left">
+        <div id="videoGrid" class="video-grid"></div>
+      </div>
+      <aside class="chat-panel">
+        <h2>Live chat</h2>
+        <p id="chatHint" class="hint">Only logged-in users can post.</p>
+        <div id="chatMessages" class="chat-messages" aria-live="polite"></div>
+        <form id="chatForm" class="chat-form">
+          <input id="chatInput" type="text" maxlength="2000" placeholder="Write a message..." />
+          <button type="submit" class="primary">Send</button>
+        </form>
+        <h3>In room</h3>
+        <ul id="participantList" class="participant-list"></ul>
+      </aside>
+    </section>
+    <div id="helpModal" class="modal-backdrop" hidden>
+      <div class="modal-card" role="dialog" aria-modal="true" aria-label="Live help">
+        <div class="modal-head">
+          <h2>Live help</h2>
+          <button type="button" id="btnCloseHelp" class="secondary">Close</button>
+        </div>
+        <p>Step 1 tests camera/microphone in your browser. Step 2 starts publishing to the room.</p>
+        <p>If camera fails: allow browser permissions, close apps using camera, and check OS privacy settings.</p>
+        <p>Chat messages persist for this room. Only logged-in users can send messages.</p>
+        <h3>Diagnostics</h3>
+        <pre id="liveDiag" class="live-diag" hidden></pre>
+      </div>
+    </div>
+    <div id="postBroadcastModal" class="modal-backdrop" hidden>
+      <div class="modal-card" role="dialog" aria-modal="true" aria-label="Post broadcast actions">
+        <div class="modal-head">
+          <h2>Broadcast ended</h2>
+          <button type="button" id="btnClosePostBroadcast" class="secondary">Close</button>
+        </div>
+        <p>You can save your room chat transcript or delete all chat messages.</p>
+        <div class="live-actions">
+          <button type="button" id="btnSaveChatTranscript" class="secondary">Save chat</button>
+          <button type="button" id="btnDeleteAllChat" class="danger">Delete all messages</button>
+        </div>
+        <p id="postBroadcastStatus" class="hint"></p>
+      </div>
+    </div>
   </main>
   <script>window.CAMME_API_BASE = {{jsString .APIPrefix}};</script>
   <script src="https://cdn.jsdelivr.net/npm/livekit-client@2.18.6/dist/livekit-client.umd.min.js"></script>

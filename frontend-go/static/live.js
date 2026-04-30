@@ -20,6 +20,20 @@
   const rawPreview = document.getElementById('rawPreview');
   const rawStatus = document.getElementById('rawStatus');
   const step2Wrap = document.getElementById('step2Wrap');
+  const chatMessagesEl = document.getElementById('chatMessages');
+  const chatForm = document.getElementById('chatForm');
+  const chatInput = document.getElementById('chatInput');
+  const chatHint = document.getElementById('chatHint');
+  const participantListEl = document.getElementById('participantList');
+  const btnHelp = document.getElementById('btnHelp');
+  const btnCloseHelp = document.getElementById('btnCloseHelp');
+  const helpModal = document.getElementById('helpModal');
+  const liveBadge = document.getElementById('liveBadge');
+  const postBroadcastModal = document.getElementById('postBroadcastModal');
+  const btnClosePostBroadcast = document.getElementById('btnClosePostBroadcast');
+  const btnSaveChatTranscript = document.getElementById('btnSaveChatTranscript');
+  const btnDeleteAllChat = document.getElementById('btnDeleteAllChat');
+  const postBroadcastStatus = document.getElementById('postBroadcastStatus');
 
   const LK = window.LivekitClient;
   const TOKEN_KEY = 'camme_access_token';
@@ -28,7 +42,10 @@
   /** @type {MediaStream | null} */
   let rawStream = null;
   let heartbeatTimer = null;
+  let chatPollTimer = null;
   let lastViewerCount = 0;
+  let lastChatId = 0;
+  let hasBroadcasted = false;
 
   function jwtPayload(jwt) {
     const parts = String(jwt).split('.');
@@ -120,6 +137,93 @@
     statusEl.textContent = text;
   }
 
+  function setLiveBadgeVisible(visible) {
+    if (!liveBadge) return;
+    liveBadge.hidden = !visible;
+  }
+
+  function setPostBroadcastStatus(text) {
+    if (!postBroadcastStatus) return;
+    postBroadcastStatus.textContent = text;
+  }
+
+  function participantDisplayName(participant) {
+    const id = String(participant.identity || 'participant');
+    if (id.startsWith('host:')) return 'Broadcaster';
+    if (id.startsWith('viewer:')) return 'Viewer';
+    return id;
+  }
+
+  function renderParticipants() {
+    if (!participantListEl) return;
+    const list = [room.localParticipant, ...Array.from(room.remoteParticipants.values())]
+      .filter(Boolean)
+      .map((p) => ({
+        sid: p.sid,
+        label: p.isLocal ? `You (${participantDisplayName(p)})` : participantDisplayName(p),
+      }));
+    participantListEl.innerHTML = '';
+    list.forEach((item) => {
+      const li = document.createElement('li');
+      li.textContent = item.label;
+      participantListEl.appendChild(li);
+    });
+  }
+
+  function formatTime(iso) {
+    const d = new Date(iso);
+    if (Number.isNaN(d.getTime())) return '';
+    return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  }
+
+  function renderChatMessage(item) {
+    if (!chatMessagesEl) return;
+    const wrap = document.createElement('div');
+    wrap.className = 'chat-item';
+    const meta = document.createElement('div');
+    meta.className = 'chat-meta';
+    meta.textContent = `${item.display_name} • ${formatTime(item.created_at_iso)}`;
+    const body = document.createElement('div');
+    body.className = 'chat-body';
+    body.textContent = item.body;
+    wrap.appendChild(meta);
+    wrap.appendChild(body);
+    chatMessagesEl.appendChild(wrap);
+    chatMessagesEl.scrollTop = chatMessagesEl.scrollHeight;
+  }
+
+  async function loadChatMessages() {
+    if (!chatMessagesEl) return;
+    const res = await fetch(`${API_BASE}/chat/messages?room=${encodeURIComponent(roomName)}&limit=150`);
+    if (!res.ok) return;
+    const data = await res.json();
+    const items = Array.isArray(data.items) ? data.items : [];
+    const newItems = items.filter((i) => Number(i.id) > lastChatId);
+    if (!lastChatId) {
+      chatMessagesEl.innerHTML = '';
+      items.forEach(renderChatMessage);
+      if (items.length) lastChatId = Number(items[items.length - 1].id || 0);
+      return;
+    }
+    newItems.forEach(renderChatMessage);
+    if (newItems.length) lastChatId = Number(newItems[newItems.length - 1].id || lastChatId);
+  }
+
+  function startChatPolling() {
+    stopChatPolling();
+    loadChatMessages().catch(() => {});
+    chatPollTimer = setInterval(() => {
+      loadChatMessages().catch(() => {});
+    }, 3000);
+  }
+
+  function stopChatPolling() {
+    if (chatPollTimer) {
+      clearInterval(chatPollTimer);
+      chatPollTimer = null;
+    }
+  }
+
   function computeViewerCount() {
     const participants = [room.localParticipant, ...Array.from(room.remoteParticipants.values())];
     const viewerParticipants = participants.filter((p) => p && !String(p.identity || '').startsWith('host:'));
@@ -133,6 +237,37 @@
   }
 
   if (step2Wrap) step2Wrap.hidden = !wantsPublish;
+  setLiveBadgeVisible(false);
+
+  if (btnHelp && helpModal) {
+    btnHelp.addEventListener('click', () => {
+      helpModal.hidden = false;
+    });
+  }
+  if (btnCloseHelp && helpModal) {
+    btnCloseHelp.addEventListener('click', () => {
+      helpModal.hidden = true;
+    });
+  }
+  if (helpModal) {
+    helpModal.addEventListener('click', (e) => {
+      if (e.target === helpModal) helpModal.hidden = true;
+    });
+  }
+  if (btnClosePostBroadcast && postBroadcastModal) {
+    btnClosePostBroadcast.addEventListener('click', () => {
+      postBroadcastModal.hidden = true;
+      setPostBroadcastStatus('');
+    });
+  }
+  if (postBroadcastModal) {
+    postBroadcastModal.addEventListener('click', (e) => {
+      if (e.target === postBroadcastModal) {
+        postBroadcastModal.hidden = true;
+        setPostBroadcastStatus('');
+      }
+    });
+  }
 
   if (typeof LK !== 'undefined' && LK && typeof LK.isBrowserSupported === 'function') {
     try {
@@ -364,9 +499,11 @@
     })
     .on(LK.RoomEvent.ParticipantConnected, () => {
       updateViewerCountUI();
+      renderParticipants();
     })
     .on(LK.RoomEvent.ParticipantDisconnected, () => {
       updateViewerCountUI();
+      renderParticipants();
     })
     .on(LK.RoomEvent.MediaDevicesError, (err) => {
       console.error('LiveKit MediaDevicesError', err);
@@ -383,15 +520,23 @@
     .on(LK.RoomEvent.Disconnected, () => {
       setStatus('Left room');
       updateViewerCountUI();
+      renderParticipants();
       btnToggleMic.hidden = true;
       btnToggleCam.hidden = true;
       if (btnStartBroadcast) btnStartBroadcast.disabled = true;
+      setLiveBadgeVisible(false);
+      stopChatPolling();
     });
 
   btnLeave.addEventListener('click', () => {
     stopBroadcastHeartbeat();
+    stopChatPolling();
     stopRawStream();
     room.disconnect();
+    if (wantsPublish && hasBroadcasted && postBroadcastModal) {
+      postBroadcastModal.hidden = false;
+      setPostBroadcastStatus('');
+    }
   });
 
   let micOn = true;
@@ -455,6 +600,8 @@
     btnToggleMic.hidden = false;
     btnToggleCam.hidden = false;
     setStatus('Broadcasting — preview below');
+    setLiveBadgeVisible(true);
+    hasBroadcasted = true;
 
     room.localParticipant.videoTrackPublications.forEach((pub) => {
       if (pub.track) attachTrack(pub.track, room.localParticipant);
@@ -508,6 +655,8 @@
         setStatus('Connected · watching (viewer)');
       }
       updateViewerCountUI();
+      renderParticipants();
+      startChatPolling();
 
       if (!wantsPublish) {
         room.localParticipant.videoTrackPublications.forEach((pub) => {
@@ -586,7 +735,102 @@
 
   window.addEventListener('beforeunload', () => {
     stopBroadcastHeartbeat();
+    stopChatPolling();
   });
+
+  async function fetchChatForTranscript() {
+    const res = await fetch(`${API_BASE}/chat/messages?room=${encodeURIComponent(roomName)}&limit=500`);
+    if (!res.ok) throw new Error('Could not load chat for transcript');
+    const data = await res.json();
+    return Array.isArray(data.items) ? data.items : [];
+  }
+
+  function downloadTextFile(filename, content) {
+    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  if (btnSaveChatTranscript) {
+    btnSaveChatTranscript.addEventListener('click', async () => {
+      try {
+        setPostBroadcastStatus('Preparing transcript…');
+        const items = await fetchChatForTranscript();
+        const lines = items.map((m) => `[${formatTime(m.created_at_iso)}] ${m.display_name}: ${m.body}`);
+        const filename = `camme-chat-${roomName}-${new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-')}.txt`;
+        downloadTextFile(filename, lines.join('\n'));
+        setPostBroadcastStatus('Chat transcript saved.');
+      } catch (err) {
+        setPostBroadcastStatus('Could not save chat transcript.');
+      }
+    });
+  }
+
+  if (btnDeleteAllChat) {
+    btnDeleteAllChat.addEventListener('click', async () => {
+      const token = localStorage.getItem(TOKEN_KEY);
+      if (!token) {
+        setPostBroadcastStatus('Sign in as broadcaster to delete chat.');
+        return;
+      }
+      if (!window.confirm('Delete all chat messages for this room? This cannot be undone.')) return;
+      try {
+        setPostBroadcastStatus('Deleting chat messages…');
+        const res = await fetch(`${API_BASE}/chat/messages/delete-all?room=${encodeURIComponent(roomName)}`, {
+          method: 'POST',
+          headers: {
+            ...getAuthHeaders(),
+          },
+        });
+        if (!res.ok) throw new Error('delete failed');
+        chatMessagesEl.innerHTML = '';
+        lastChatId = 0;
+        setPostBroadcastStatus('All chat messages deleted.');
+        if (postBroadcastModal) postBroadcastModal.hidden = true;
+        setPostBroadcastStatus('');
+        if (broadcastPanel) broadcastPanel.hidden = false;
+        setStatus('Ready to start a new broadcast.');
+      } catch (err) {
+        setPostBroadcastStatus('Could not delete chat messages (broadcaster only).');
+      }
+    });
+  }
+
+  if (chatForm && chatInput) {
+    chatForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const token = localStorage.getItem(TOKEN_KEY);
+      if (!token) {
+        if (chatHint) chatHint.textContent = 'Sign in on /auth to send messages.';
+        return;
+      }
+      const body = chatInput.value.trim();
+      if (!body) return;
+      const res = await fetch(`${API_BASE}/chat/messages`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders(),
+        },
+        body: JSON.stringify({ room_name: roomName, body }),
+      });
+      if (!res.ok) {
+        if (chatHint) chatHint.textContent = 'Could not send message.';
+        return;
+      }
+      const item = await res.json();
+      renderChatMessage(item);
+      lastChatId = Math.max(lastChatId, Number(item.id || 0));
+      chatInput.value = '';
+      if (chatHint) chatHint.textContent = 'Only logged-in users can post.';
+    });
+  }
 
   start();
 })();
