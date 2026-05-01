@@ -10,6 +10,7 @@ from app.api.payment_routes import router as payment_router
 from app.api.routes import router as api_router
 from app.core.config import settings
 from app.db.session import init_db
+from app.services.stripe_checkout import stripe_configured
 
 log = logging.getLogger('uvicorn.error')
 
@@ -19,6 +20,7 @@ async def lifespan(_app: FastAPI):
     try:
         init_db()
         log.info('Database tables ensured (create_all).')
+        log.info('Stripe token checkout enabled: %s', stripe_configured())
     except Exception:
         log.exception('init_db failed — check POSTGRES_DSN and SSL settings')
         raise

@@ -20,6 +20,17 @@
     <p id="buyError" class="error" hidden></p>
     <p id="buySuccess" class="hint" hidden style="color:#86efac;">Payment successful — your balance is updated. You can <a href="/">return home</a> or keep buying.</p>
 
+    <section id="buyCustomSection" class="card buy-custom-section" hidden>
+      <h2>Choose your own amount</h2>
+      <p class="hint" id="customRateHint"></p>
+      <div class="buy-custom-row">
+        <label class="buy-custom-label" for="customTokensInput">Number of tokens</label>
+        <input type="number" id="customTokensInput" class="buy-custom-input" min="1" step="1" />
+      </div>
+      <p class="buy-price" id="customPriceDisplay">—</p>
+      <button type="button" class="primary" id="btnCustomCheckout">Pay with card</button>
+    </section>
+
     <section id="buyPackages" class="buy-packages" hidden></section>
   </main>
   <script>window.CAMME_API_BASE = {{jsString .APIPrefix}};</script>

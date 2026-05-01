@@ -512,6 +512,31 @@ pre {
   margin-top: 0;
 }
 
+.buy-custom-section {
+  margin-bottom: 1.25rem;
+}
+
+.buy-custom-section h2 {
+  margin-top: 0;
+  font-size: 1.15rem;
+}
+
+.buy-custom-row {
+  margin: 0.75rem 0;
+}
+
+.buy-custom-label {
+  display: block;
+  font-size: 0.85rem;
+  color: #9ca3af;
+  margin-bottom: 0.35rem;
+}
+
+.buy-custom-input {
+  max-width: 12rem;
+  margin-bottom: 0;
+}
+
 .buy-packages {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));

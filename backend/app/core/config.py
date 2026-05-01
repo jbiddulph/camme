@@ -1,9 +1,18 @@
+import os
+
 from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+# On Heroku (DYNO set), do not load a bundled .env — Config Vars must win.
+_ENV_FILE = '.env' if not os.environ.get('DYNO') else None
+
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_file='.env', env_file_encoding='utf-8', extra='ignore')
+    model_config = SettingsConfigDict(
+        env_file=_ENV_FILE,
+        env_file_encoding='utf-8',
+        extra='ignore',
+    )
 
     app_name: str = 'Camme API'
     # Shown in Stripe product text and emails to users
@@ -36,6 +45,10 @@ class Settings(BaseSettings):
     # Optional JSON override for token packages: [{"id":"t100","label":"100 tokens","tokens":100,"unit_amount":499,"currency":"gbp"}, ...]
     # unit_amount = minor units (pence for gbp). If empty, built-in defaults are used.
     stripe_packages_json: str = ''
+    # Custom “buy N tokens” checkout: total charged = round(tokens * gbp * 100) pence (min ~£0.30 Stripe rule)
+    stripe_gbp_per_token_purchase: float = 0.0499
+    stripe_minimum_charge_gbp: float = 0.30
+    stripe_custom_tokens_max: int = 50_000
     allowed_origins: str = 'http://localhost:8080'
 
     @field_validator('stripe_secret_key', 'stripe_publishable_key', 'stripe_webhook_secret', mode='before')

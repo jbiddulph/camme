@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field, model_validator
 
 
 class RegisterRequest(BaseModel):
@@ -152,14 +152,44 @@ class StripePackagePublic(BaseModel):
     currency: str = 'gbp'
 
 
+class CustomPurchaseOptions(BaseModel):
+    min_tokens: int
+    max_tokens: int
+    gbp_per_token: float
+    currency: str = 'gbp'
+
+
 class StripePackagesResponse(BaseModel):
     packages: list[StripePackagePublic]
     publishable_key: str
     checkout_enabled: bool
+    # Always returned; empty when checkout is enabled
+    payments_hint: str = ''
+    custom_purchase: CustomPurchaseOptions | None = None
 
 
 class StripeCheckoutRequest(BaseModel):
-    package_id: str = Field(min_length=1, max_length=64)
+    package_id: str | None = Field(default=None, max_length=64)
+    custom_tokens: int | None = None
+
+    @model_validator(mode='after')
+    def package_or_custom(self):
+        from app.core.config import settings
+
+        pid = (self.package_id or '').strip()
+        ct = self.custom_tokens
+        has_p = bool(pid)
+        has_c = ct is not None
+        if has_p == has_c:
+            raise ValueError('Send exactly one of: package_id (preset pack) or custom_tokens (integer).')
+        if has_c and ct is not None:
+            if ct < 1:
+                raise ValueError('custom_tokens must be at least 1')
+            if ct > settings.stripe_custom_tokens_max:
+                raise ValueError(f'custom_tokens cannot exceed {settings.stripe_custom_tokens_max}')
+        if pid:
+            self.package_id = pid
+        return self
 
 
 class StripeCheckoutResponse(BaseModel):

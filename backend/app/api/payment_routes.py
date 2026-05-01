@@ -9,18 +9,22 @@ from sqlalchemy.orm import Session
 
 from app.api.auth_common import current_user_from_auth
 from app.api.schemas import (
+    CustomPurchaseOptions,
     StripeCheckoutRequest,
     StripeCheckoutResponse,
     StripePackagePublic,
     StripePackagesResponse,
 )
-from app.core.config import settings
 from app.db.session import get_db
 from app.models.user import User
 from app.services.stripe_checkout import (
     create_checkout_session,
+    create_checkout_session_custom,
+    get_custom_purchase_options,
+    get_stripe_publishable_key,
     list_packages,
     process_checkout_completed,
+    stripe_checkout_disabled_reason,
     stripe_configured,
     verify_webhook_payload,
 )
@@ -51,11 +55,17 @@ def _public_packages() -> list[StripePackagePublic]:
 
 @router.get('/payments/stripe/packages', response_model=StripePackagesResponse)
 def stripe_packages_public() -> StripePackagesResponse:
-    pk = (settings.stripe_publishable_key or '').strip()
+    pk = get_stripe_publishable_key()
+    enabled = stripe_configured()
+    hint = '' if enabled else stripe_checkout_disabled_reason()
+    raw_custom = get_custom_purchase_options()
+    custom = CustomPurchaseOptions(**raw_custom) if raw_custom else None
     return StripePackagesResponse(
         packages=_public_packages(),
         publishable_key=pk,
-        checkout_enabled=stripe_configured(),
+        checkout_enabled=enabled,
+        payments_hint=hint,
+        custom_purchase=custom,
     )
 
 
@@ -70,7 +80,10 @@ def stripe_create_checkout(
     user = current_user_from_auth(authorization, db, required=True)
     assert user is not None
     try:
-        session = create_checkout_session(user=user, package_id=body.package_id)
+        if body.custom_tokens is not None:
+            session = create_checkout_session_custom(user=user, tokens=body.custom_tokens)
+        else:
+            session = create_checkout_session(user=user, package_id=body.package_id or '')
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     except RuntimeError as exc:
