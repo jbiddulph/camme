@@ -26,6 +26,20 @@ Camme is a starter social cam + chat web app architecture using:
 
 **How Camme links a broadcaster to Lovense (not your Lovense app “username”):** the API calls Lovense `getToken` with **`uid = str(camme_user.id)`** and **`uname = camme_username`** (see `POST /api/v1/lovense/auth-token`). Lovense ties the browser SDK session to that **`uid`** under **your** developer token + **platform** (website name). The toy is controlled when **Lovense Connect** is running and associated with that same integration; you do **not** need the Camme username to match a Lovense nickname. Tips are delivered in-app via your API (`tips/inbox`); `sendToyCommand` runs in the broadcaster’s browser on that SDK session.
 
+## Stripe — buying tokens (`/buy-tokens`)
+
+- **Web page:** **`/buy-tokens`** (Go app). **API:** `GET /api/v1/payments/stripe/packages`, `POST /api/v1/payments/stripe/checkout` (Bearer JWT), `POST /api/v1/payments/stripe/webhook` (Stripe-signed, no JWT).
+- **Env (API / Heroku `camme-api`):** **`STRIPE_SECRET_KEY`**, **`STRIPE_WEBHOOK_SECRET`**, **`STRIPE_PUBLISHABLE_KEY`** (safe to expose; returned on `/packages` for future client use), **`STRIPE_FRONTEND_BASE_URL`** (e.g. `https://www.exhibitionist.me` — used for Checkout success/cancel URLs), **`SITE_DISPLAY_NAME`** (product copy). Optional **`STRIPE_PACKAGES_JSON`** overrides default packs in `app/services/stripe_checkout.py`.
+- **Webhook URL in Stripe Dashboard:** `https://<your-api-host>/api/v1/payments/stripe/webhook` (same path if the API is only reachable under a prefix — adjust to match production). After payment, **`checkout.session.completed`** credits **`token_balance`** idempotently (`camme_token_purchases`).
+
+### How Exhibitionist.me / the platform earns money
+
+1. **Markup on token packs (implemented):** You set real-money prices in Stripe; each pack grants a fixed number of tipping tokens. Viewers pay **you** via Stripe. When they tip, models accrue earnings at **`TOKEN_VALUE_GBP`** per token (e.g. £0.05). If a pack sells **100 tokens for £5.99** and each tipped token is worth **£0.05** to the model, you keep roughly the gap after Stripe fees — e.g. full £5.99 if none tipped yet, or the difference between price paid and model liability as tokens move. Tune **`STRIPE_PACKAGES_JSON`** / defaults so average **price per token is above `TOKEN_VALUE_GBP`** plus your costs.
+2. **Fee on payouts (Stripe Connect — not implemented here):** Pay models through **Connect** and take **`application_fee_percent`** or a fixed fee on each transfer; your platform account receives that fee automatically.
+3. **Take rate on tips (policy change):** You could credit models at less than one **`TOKEN_VALUE_GBP`** per token (or deduct a platform % before recording earnings). That would require product/accounting changes beyond the current “1 tipped token = `TOKEN_VALUE_GBP` to model” rule.
+
+**Starter tokens:** **`INITIAL_TOKEN_BALANCE`** (e.g. `0` in production if all spend is purchased).
+
 ## Quick Start
 
 ### 1) Start infra
@@ -59,7 +73,8 @@ Frontend runs on `http://localhost:8080` and proxies API calls to backend (`http
 
 ## Core Flows Included
 
-- User registration/login (starter token flow) persisted in PostgreSQL (`camme_users`)
+- User registration/login (optional starter tokens via **`INITIAL_TOKEN_BALANCE`**) persisted in PostgreSQL (`camme_users`)
+- **Stripe Checkout** token packs (`/buy-tokens`, webhook credit to `token_balance`)
 - Room creation/listing persisted in PostgreSQL (`camme_rooms`)
 - LiveKit access token generation (host/viewer) + **WebSocket URL** for browser clients
 - **Broadcast / watch** pages at `/live` (camera + mic for hosts; subscribe-only for viewers)

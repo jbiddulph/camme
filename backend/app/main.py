@@ -6,6 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from sqlalchemy.exc import SQLAlchemyError
 
+from app.api.payment_routes import router as payment_router
 from app.api.routes import router as api_router
 from app.core.config import settings
 from app.db.session import init_db
@@ -35,6 +36,7 @@ app.add_middleware(
 )
 
 app.include_router(api_router, prefix=settings.api_prefix)
+app.include_router(payment_router, prefix=settings.api_prefix)
 
 
 @app.exception_handler(SQLAlchemyError)

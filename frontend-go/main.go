@@ -243,6 +243,16 @@ func main() {
 		}
 	})
 
+	mux.HandleFunc("/buy-tokens", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+		if err := tmpl.ExecuteTemplate(w, "buy-tokens.html", LivePageData{APIPrefix: apiPrefix}); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+	})
+
 	mux.HandleFunc("/watch", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
 			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)

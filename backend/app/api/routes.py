@@ -3,7 +3,6 @@ from datetime import datetime, timedelta, timezone
 import re
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Header
-from jose import JWTError, jwt
 from sqlalchemy import delete, func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
@@ -40,6 +39,7 @@ from app.core.security import (
     hash_password,
     verify_password,
 )
+from app.api.auth_common import current_user_from_auth
 from app.db.session import get_db
 from app.models.room import Room
 from app.models.user import User
@@ -80,29 +80,6 @@ def _sanitize_room_suffix(value: str) -> str:
     if not clean:
         clean = uuid.uuid4().hex[:8]
     return clean[:60]
-
-
-def _current_user_from_auth(authorization: str | None, db: Session, required: bool = False) -> User | None:
-    if not authorization or not authorization.lower().startswith('bearer '):
-        if required:
-            raise HTTPException(status_code=401, detail='Authentication required')
-        return None
-    token = authorization[7:].strip()
-    try:
-        claims = jwt.decode(token, settings.secret_key, algorithms=['HS256'])
-    except JWTError:
-        if required:
-            raise HTTPException(status_code=401, detail='Invalid token')
-        return None
-    subject = claims.get('sub')
-    if not isinstance(subject, str) or not subject:
-        if required:
-            raise HTTPException(status_code=401, detail='Invalid token subject')
-        return None
-    user = db.scalar(select(User).where(User.email == subject))
-    if required and not user:
-        raise HTTPException(status_code=401, detail='User not found')
-    return user
 
 
 @router.get('/health')
@@ -148,7 +125,7 @@ def read_me(
     authorization: str | None = Header(default=None, alias='Authorization'),
     db: Session = Depends(get_db),
 ) -> UserMeResponse:
-    user = _current_user_from_auth(authorization, db, required=True)
+    user = current_user_from_auth(authorization, db, required=True)
     assert user is not None
     return UserMeResponse(
         id=user.id,
@@ -173,7 +150,7 @@ def lovense_auth_token(
 ) -> LovenseAuthTokenResponse:
     if not lovense_configured() or not platform_configured():
         raise HTTPException(status_code=503, detail='Lovense is not configured (LOVENSE_TOKEN / LOVENSE_PLATFORM)')
-    user = _current_user_from_auth(authorization, db, required=True)
+    user = current_user_from_auth(authorization, db, required=True)
     assert user is not None
     uid = str(user.id)
     try:
@@ -193,7 +170,7 @@ def lovense_viewer_control_target(
     authorization: str | None = Header(default=None, alias='Authorization'),
     db: Session = Depends(get_db),
 ) -> LovenseViewerTargetResponse:
-    _current_user_from_auth(authorization, db, required=True)
+    current_user_from_auth(authorization, db, required=True)
     try:
         target = encrypt_viewer_control_target(payload.model_uid.strip())
     except RuntimeError as exc:
@@ -210,7 +187,7 @@ def create_tip(
     idempotency_key: str | None = Header(default=None, alias='Idempotency-Key'),
     db: Session = Depends(get_db),
 ) -> TipItem:
-    user = _current_user_from_auth(authorization, db, required=True)
+    user = current_user_from_auth(authorization, db, required=True)
     assert user is not None
     host = _broadcaster_user_for_room(payload.room_name, db)
     if host.id == user.id:
@@ -275,7 +252,7 @@ def tips_inbox(
     authorization: str | None = Header(default=None, alias='Authorization'),
     db: Session = Depends(get_db),
 ) -> TipInboxResponse:
-    user = _current_user_from_auth(authorization, db, required=True)
+    user = current_user_from_auth(authorization, db, required=True)
     assert user is not None
     rows = db.scalars(
         select(Tip)
@@ -311,7 +288,7 @@ def tips_earnings(
     authorization: str | None = Header(default=None, alias='Authorization'),
     db: Session = Depends(get_db),
 ) -> TipsEarningsResponse:
-    user = _current_user_from_auth(authorization, db, required=True)
+    user = current_user_from_auth(authorization, db, required=True)
     assert user is not None
     total_tokens = db.scalar(
         select(func.coalesce(func.sum(Tip.amount), 0)).where(Tip.to_user_id == user.id)
@@ -373,7 +350,7 @@ def create_room(
     if existing:
         raise HTTPException(status_code=409, detail='Room name already exists')
 
-    user = _current_user_from_auth(authorization, db, required=False)
+    user = current_user_from_auth(authorization, db, required=False)
     creator_id = user.id if user else None
 
     room = Room(name=payload.room_name, created_by_id=creator_id)
@@ -438,7 +415,7 @@ def start_broadcast(
     authorization: str | None = Header(default=None, alias='Authorization'),
     db: Session = Depends(get_db),
 ) -> BroadcastStartResponse:
-    user = _current_user_from_auth(authorization, db, required=True)
+    user = current_user_from_auth(authorization, db, required=True)
     assert user is not None
 
     room = db.scalar(select(Room).where(Room.created_by_id == user.id).order_by(Room.created_at.asc()))
@@ -499,7 +476,7 @@ def heartbeat_broadcast(
     authorization: str | None = Header(default=None, alias='Authorization'),
     db: Session = Depends(get_db),
 ) -> dict:
-    user = _current_user_from_auth(authorization, db, required=True)
+    user = current_user_from_auth(authorization, db, required=True)
     assert user is not None
     room = db.scalar(select(Room).where(Room.name == payload.room_name))
     if not room or room.created_by_id != user.id:
@@ -535,7 +512,7 @@ def stop_broadcast(
     authorization: str | None = Header(default=None, alias='Authorization'),
     db: Session = Depends(get_db),
 ) -> dict:
-    user = _current_user_from_auth(authorization, db, required=True)
+    user = current_user_from_auth(authorization, db, required=True)
     assert user is not None
     presence = db.scalar(select(BroadcastPresence).where(BroadcastPresence.user_id == user.id))
     if presence and presence.room_name == room:
@@ -633,7 +610,7 @@ def create_chat_message(
     if not body:
         raise HTTPException(status_code=400, detail='Message cannot be empty')
 
-    user = _current_user_from_auth(authorization, db, required=False)
+    user = current_user_from_auth(authorization, db, required=False)
     if user:
         row = ChatMessage(
             room_name=payload.room_name,
@@ -670,7 +647,7 @@ def delete_all_chat_messages(
     authorization: str | None = Header(default=None, alias='Authorization'),
     db: Session = Depends(get_db),
 ) -> dict:
-    user = _current_user_from_auth(authorization, db, required=True)
+    user = current_user_from_auth(authorization, db, required=True)
     assert user is not None
     room_row = db.scalar(select(Room).where(Room.name == room))
     if not room_row or room_row.created_by_id != user.id:

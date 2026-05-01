@@ -5,6 +5,8 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file='.env', env_file_encoding='utf-8', extra='ignore')
 
     app_name: str = 'Camme API'
+    # Shown in Stripe product text and emails to users
+    site_display_name: str = 'Exhibitionist.me'
     api_prefix: str = '/api/v1'
     secret_key: str = 'change-me'
     access_token_expire_minutes: int = 60
@@ -24,7 +26,15 @@ class Settings(BaseSettings):
     livekit_api_key: str = 'devkey'
     livekit_api_secret: str = 'secret'
 
-    stripe_secret_key: str = 'sk_test_replace_me'
+    # Stripe — https://dashboard.stripe.com/apikeys  (use test keys in dev)
+    stripe_secret_key: str = ''
+    stripe_webhook_secret: str = ''
+    stripe_publishable_key: str = ''
+    # Absolute base URL of the public web app (for Checkout success/cancel redirects)
+    stripe_frontend_base_url: str = 'http://localhost:8080'
+    # Optional JSON override for token packages: [{"id":"t100","label":"100 tokens","tokens":100,"unit_amount":499,"currency":"gbp"}, ...]
+    # unit_amount = minor units (pence for gbp). If empty, built-in defaults are used.
+    stripe_packages_json: str = ''
     allowed_origins: str = 'http://localhost:8080'
 
     # Lovense Standard API — developer dashboard: https://developer.lovense.com

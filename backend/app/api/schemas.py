@@ -142,3 +142,25 @@ class TipsEarningsResponse(BaseModel):
     until_payout_gbp: float
     payout_eligible: bool
     tips: list[TipItem]
+
+
+class StripePackagePublic(BaseModel):
+    id: str
+    label: str
+    tokens: int
+    unit_amount: int
+    currency: str = 'gbp'
+
+
+class StripePackagesResponse(BaseModel):
+    packages: list[StripePackagePublic]
+    publishable_key: str
+    checkout_enabled: bool
+
+
+class StripeCheckoutRequest(BaseModel):
+    package_id: str = Field(min_length=1, max_length=64)
+
+
+class StripeCheckoutResponse(BaseModel):
+    url: str

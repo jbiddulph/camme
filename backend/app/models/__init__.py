@@ -3,6 +3,7 @@ from app.models.chat_message import ChatMessage
 from app.models.report import Report
 from app.models.room import Room
 from app.models.tip import Tip
+from app.models.token_purchase import TokenPurchase
 from app.models.user import User
 
-__all__ = ['User', 'Room', 'Report', 'BroadcastPresence', 'ChatMessage', 'Tip']
+__all__ = ['User', 'Room', 'Report', 'BroadcastPresence', 'ChatMessage', 'Tip', 'TokenPurchase']

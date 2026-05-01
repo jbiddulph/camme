@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Buy tokens</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <header class="site-header site-header--split">
+    <a href="/" class="site-brand" aria-label="Home"><img src="/static/exhibitionist.png" alt="" class="site-logo" width="280" height="52" decoding="async" /></a>
+    <div class="site-header-actions">
+      <nav class="header-inline-nav" aria-label="Quick links">
+        <a href="/">Home</a>
+        <span class="header-inline-sep" aria-hidden="true">·</span>
+        <a href="/auth">Account</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container full-width buy-tokens-page">
+    <h1>Buy tokens</h1>
+    <p class="hint">
+      Tokens are used to tip broadcasters during live streams. Pricing includes platform operating costs;
+      models earn a fixed amount per tipped token (see <a href="/tips">Tips &amp; earnings</a> for broadcaster view).
+    </p>
+    <p id="buyGate" class="hint" hidden>Please <a href="/auth">sign in</a> to purchase tokens.</p>
+    <p id="buyDisabled" class="hint" hidden>Card payments are not enabled yet (Stripe keys not configured on the server).</p>
+    <p id="buyError" class="error" hidden></p>
+    <p id="buySuccess" class="hint" hidden style="color:#86efac;">Payment successful — your balance is updated. You can <a href="/">return home</a> or keep buying.</p>
+
+    <section id="buyPackages" class="buy-packages" hidden></section>
+  </main>
+  <script>window.CAMME_API_BASE = {{jsString .APIPrefix}};</script>
+  <script src="/static/buy-tokens.js"></script>
+</body>
+</html>
