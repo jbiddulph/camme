@@ -18,6 +18,53 @@
     buySuccess.hidden = false;
   }
 
+  function schedulePostPurchaseWalletRefresh() {
+    var attempts = 0;
+    var maxAttempts = 35;
+    var intervalMs = 900;
+    function tick() {
+      window.dispatchEvent(new Event('camme-wallet-refresh'));
+      attempts += 1;
+      if (attempts < maxAttempts) {
+        setTimeout(tick, intervalMs);
+      }
+    }
+    tick();
+  }
+
+  async function syncSessionIfNeeded(token) {
+    if (params.get('paid') !== '1') return;
+    var sessionId = params.get('session_id');
+    if (!sessionId) {
+      schedulePostPurchaseWalletRefresh();
+      return;
+    }
+    try {
+      var res = await fetch(API_BASE + '/payments/stripe/sync-session', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: 'Bearer ' + token,
+        },
+        body: JSON.stringify({ session_id: sessionId }),
+      });
+      var text = await res.text();
+      var data = {};
+      try {
+        data = JSON.parse(text);
+      } catch (_) {}
+      if (res.ok && typeof data.token_balance === 'number') {
+        window.dispatchEvent(
+          new CustomEvent('camme-wallet-refresh', { detail: { balance: data.token_balance } })
+        );
+        return;
+      }
+    } catch (_) {
+      /* fall through */
+    }
+    schedulePostPurchaseWalletRefresh();
+  }
+
   function fmtMajorFromPence(pence, currency) {
     const n = Number(pence) / 100;
     const cur = (currency || 'gbp').toUpperCase();
@@ -188,6 +235,8 @@
       return;
     }
 
+    await syncSessionIfNeeded(token);
+
     let data;
     try {
       const res = await fetch(`${API_BASE}/payments/stripe/packages`);
@@ -220,10 +269,6 @@
 
     setupCustomPurchase(data, token);
     renderPresetPackages(data, token);
-
-    if (params.get('paid') === '1') {
-      window.dispatchEvent(new Event('camme-wallet-refresh'));
-    }
   }
 
   load();

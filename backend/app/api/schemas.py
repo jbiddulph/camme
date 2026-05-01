@@ -194,3 +194,11 @@ class StripeCheckoutRequest(BaseModel):
 
 class StripeCheckoutResponse(BaseModel):
     url: str
+
+
+class StripeSessionSyncRequest(BaseModel):
+    session_id: str = Field(..., min_length=8, max_length=128)
+
+
+class StripeSessionSyncResponse(BaseModel):
+    token_balance: int

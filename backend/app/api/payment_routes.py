@@ -14,6 +14,8 @@ from app.api.schemas import (
     StripeCheckoutResponse,
     StripePackagePublic,
     StripePackagesResponse,
+    StripeSessionSyncRequest,
+    StripeSessionSyncResponse,
 )
 from app.db.session import get_db
 from app.models.user import User
@@ -22,6 +24,7 @@ from app.services.stripe_checkout import (
     create_checkout_session_custom,
     get_custom_purchase_options,
     get_stripe_publishable_key,
+    get_stripe_secret_key,
     list_packages,
     process_checkout_completed,
     stripe_checkout_disabled_reason,
@@ -92,6 +95,51 @@ def stripe_create_checkout(
     if not url:
         raise HTTPException(status_code=502, detail='Stripe did not return a checkout URL')
     return StripeCheckoutResponse(url=url)
+
+
+@router.post('/payments/stripe/sync-session', response_model=StripeSessionSyncResponse)
+def stripe_sync_session(
+    body: StripeSessionSyncRequest,
+    authorization: str | None = Header(default=None, alias='Authorization'),
+    db: Session = Depends(get_db),
+) -> StripeSessionSyncResponse:
+    """Apply token credit from a completed Checkout Session (same logic as webhook).
+
+    Call this when the browser returns to success_url so the balance updates even if the
+    webhook is delayed or misconfigured. Idempotent per session id.
+    """
+    if not stripe_configured():
+        raise HTTPException(status_code=503, detail='Stripe payments are not configured')
+    user = current_user_from_auth(authorization, db, required=True)
+    assert user is not None
+    sid = body.session_id.strip()
+    if not sid.startswith('cs_'):
+        raise HTTPException(status_code=400, detail='Invalid session_id')
+    stripe.api_key = get_stripe_secret_key()
+    try:
+        sess = stripe.checkout.Session.retrieve(sid)
+    except stripe.StripeError as exc:
+        raise HTTPException(status_code=400, detail=str(exc) or 'Could not load Stripe session') from exc
+    if isinstance(sess, dict):
+        d = sess
+    elif hasattr(sess, 'to_dict'):
+        d = sess.to_dict()
+    else:
+        d = dict(sess)
+    if d.get('payment_status') != 'paid':
+        raise HTTPException(status_code=400, detail='Payment not completed')
+    if str(d.get('client_reference_id') or '') != str(user.id):
+        raise HTTPException(status_code=403, detail='This purchase belongs to another account')
+    meta = d.get('metadata') or {}
+    if str(meta.get('user_id') or '') != str(user.id):
+        raise HTTPException(status_code=403, detail='This purchase belongs to another account')
+    try:
+        process_checkout_completed(db, d)
+    except IntegrityError:
+        db.rollback()
+        log.info('stripe sync-session duplicate or race sid=%s', sid)
+    db.refresh(user)
+    return StripeSessionSyncResponse(token_balance=int(user.token_balance))
 
 
 @router.post('/payments/stripe/webhook')
