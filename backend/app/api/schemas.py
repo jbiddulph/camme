@@ -81,3 +81,52 @@ class ChatMessageItem(BaseModel):
     display_name: str
     body: str
     created_at_iso: str
+
+
+class UserMeResponse(BaseModel):
+    id: int
+    username: str
+    email: str
+    token_balance: int
+
+
+class LovenseClientConfigResponse(BaseModel):
+    platform: str
+    sdk_enabled: bool
+
+
+class LovenseAuthTokenResponse(BaseModel):
+    auth_token: str
+    platform: str
+    uid: str
+
+
+class LovenseViewerTargetRequest(BaseModel):
+    model_uid: str = Field(min_length=1, max_length=128)
+
+
+class LovenseViewerTargetResponse(BaseModel):
+    target: str
+
+
+class TipCreateRequest(BaseModel):
+    room_name: str = Field(min_length=3, max_length=80)
+    amount: int = Field(ge=1, le=50_000)
+    idempotency_key: str | None = Field(default=None, max_length=64)
+
+
+class TipItem(BaseModel):
+    id: int
+    room_name: str
+    from_user_id: int
+    from_display_name: str
+    to_user_id: int
+    amount: int
+    vibrate_strength: int
+    vibrate_seconds: int
+    created_at_iso: str
+
+
+class TipInboxResponse(BaseModel):
+    items: list[TipItem]
+    max_id: int

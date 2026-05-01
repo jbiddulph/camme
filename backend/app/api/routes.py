@@ -18,8 +18,16 @@ from app.api.schemas import (
     BroadcastLiveItem,
     BroadcastStartResponse,
     LoginRequest,
+    LovenseAuthTokenResponse,
+    LovenseClientConfigResponse,
+    LovenseViewerTargetRequest,
+    LovenseViewerTargetResponse,
     RegisterRequest,
     ReportRequest,
+    TipCreateRequest,
+    TipInboxResponse,
+    TipItem,
+    UserMeResponse,
     ViewerTokenResponse,
 )
 from app.core.config import settings
@@ -36,11 +44,34 @@ from app.models.room import Room
 from app.models.user import User
 from app.models.broadcast_presence import BroadcastPresence
 from app.models.chat_message import ChatMessage
+from app.models.tip import Tip
 from app.services.livekit_service import issue_room_token
+from app.services.lovense_api import (
+    encrypt_viewer_control_target,
+    fetch_lovense_auth_token,
+    lovense_configured,
+    platform_configured,
+)
 from app.services.report_service import persist_report
 
 router = APIRouter()
 STREAM_META: dict[str, dict] = {}
+
+
+def _tip_to_vibration(amount: int) -> tuple[int, int]:
+    strength = min(20, max(1, amount // 50))
+    seconds = min(120, max(2, amount // 25))
+    return strength, seconds
+
+
+def _broadcaster_user_for_room(room_name: str, db: Session) -> User:
+    room = db.scalar(select(Room).where(Room.name == room_name.strip()))
+    if not room or not room.created_by_id:
+        raise HTTPException(status_code=404, detail='Room or broadcaster not found')
+    host = db.scalar(select(User).where(User.id == room.created_by_id))
+    if not host:
+        raise HTTPException(status_code=404, detail='Broadcaster not found')
+    return host
 
 
 def _sanitize_room_suffix(value: str) -> str:
@@ -108,6 +139,168 @@ def login(payload: LoginRequest, db: Session = Depends(get_db)) -> AuthResponse:
 
     token = create_access_token(subject=payload.email)
     return AuthResponse(access_token=token)
+
+
+@router.get('/users/me', response_model=UserMeResponse)
+def read_me(
+    authorization: str | None = Header(default=None, alias='Authorization'),
+    db: Session = Depends(get_db),
+) -> UserMeResponse:
+    user = _current_user_from_auth(authorization, db, required=True)
+    assert user is not None
+    return UserMeResponse(
+        id=user.id,
+        username=user.username,
+        email=user.email,  # type: ignore[arg-type]
+        token_balance=int(user.token_balance),
+    )
+
+
+@router.get('/lovense/client-config', response_model=LovenseClientConfigResponse)
+def lovense_client_config() -> LovenseClientConfigResponse:
+    return LovenseClientConfigResponse(
+        platform=settings.lovense_platform.strip(),
+        sdk_enabled=lovense_configured() and platform_configured(),
+    )
+
+
+@router.post('/lovense/auth-token', response_model=LovenseAuthTokenResponse)
+def lovense_auth_token(
+    authorization: str | None = Header(default=None, alias='Authorization'),
+    db: Session = Depends(get_db),
+) -> LovenseAuthTokenResponse:
+    if not lovense_configured() or not platform_configured():
+        raise HTTPException(status_code=503, detail='Lovense is not configured (LOVENSE_TOKEN / LOVENSE_PLATFORM)')
+    user = _current_user_from_auth(authorization, db, required=True)
+    assert user is not None
+    uid = str(user.id)
+    try:
+        auth_token = fetch_lovense_auth_token(uid=uid, uname=user.username)
+    except RuntimeError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+    return LovenseAuthTokenResponse(
+        auth_token=auth_token,
+        platform=settings.lovense_platform.strip(),
+        uid=uid,
+    )
+
+
+@router.post('/lovense/viewer-control-target', response_model=LovenseViewerTargetResponse)
+def lovense_viewer_control_target(
+    payload: LovenseViewerTargetRequest,
+    authorization: str | None = Header(default=None, alias='Authorization'),
+    db: Session = Depends(get_db),
+) -> LovenseViewerTargetResponse:
+    _current_user_from_auth(authorization, db, required=True)
+    try:
+        target = encrypt_viewer_control_target(payload.model_uid.strip())
+    except RuntimeError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    return LovenseViewerTargetResponse(target=target)
+
+
+@router.post('/tips', response_model=TipItem)
+def create_tip(
+    payload: TipCreateRequest,
+    authorization: str | None = Header(default=None, alias='Authorization'),
+    idempotency_key: str | None = Header(default=None, alias='Idempotency-Key'),
+    db: Session = Depends(get_db),
+) -> TipItem:
+    user = _current_user_from_auth(authorization, db, required=True)
+    assert user is not None
+    host = _broadcaster_user_for_room(payload.room_name, db)
+    if host.id == user.id:
+        raise HTTPException(status_code=400, detail='Cannot tip yourself')
+
+    idem = (payload.idempotency_key or idempotency_key or '').strip() or None
+    if idem:
+        existing = db.scalar(
+            select(Tip).where(Tip.from_user_id == user.id, Tip.idempotency_key == idem)
+        )
+        if existing:
+            from_u = db.scalar(select(User).where(User.id == existing.from_user_id))
+            assert from_u is not None
+            return TipItem(
+                id=existing.id,
+                room_name=existing.room_name,
+                from_user_id=existing.from_user_id,
+                from_display_name=from_u.username,
+                to_user_id=existing.to_user_id,
+                amount=existing.amount,
+                vibrate_strength=existing.vibrate_strength,
+                vibrate_seconds=existing.vibrate_seconds,
+                created_at_iso=existing.created_at.isoformat(),
+            )
+
+    v_strength, v_seconds = _tip_to_vibration(payload.amount)
+    from_user = db.scalar(select(User).where(User.id == user.id).with_for_update())
+    if not from_user:
+        raise HTTPException(status_code=401, detail='User not found')
+    if int(from_user.token_balance) < payload.amount:
+        raise HTTPException(status_code=400, detail='Insufficient token balance')
+
+    from_user.token_balance = int(from_user.token_balance) - payload.amount
+    tip = Tip(
+        from_user_id=user.id,
+        to_user_id=host.id,
+        room_name=payload.room_name.strip(),
+        amount=payload.amount,
+        vibrate_strength=v_strength,
+        vibrate_seconds=v_seconds,
+        idempotency_key=idem,
+    )
+    db.add(tip)
+    db.commit()
+    db.refresh(tip)
+    return TipItem(
+        id=tip.id,
+        room_name=tip.room_name,
+        from_user_id=tip.from_user_id,
+        from_display_name=from_user.username,
+        to_user_id=tip.to_user_id,
+        amount=tip.amount,
+        vibrate_strength=tip.vibrate_strength,
+        vibrate_seconds=tip.vibrate_seconds,
+        created_at_iso=tip.created_at.isoformat(),
+    )
+
+
+@router.get('/tips/inbox', response_model=TipInboxResponse)
+def tips_inbox(
+    since_id: int = Query(default=0, ge=0),
+    authorization: str | None = Header(default=None, alias='Authorization'),
+    db: Session = Depends(get_db),
+) -> TipInboxResponse:
+    user = _current_user_from_auth(authorization, db, required=True)
+    assert user is not None
+    rows = db.scalars(
+        select(Tip)
+        .where(Tip.to_user_id == user.id, Tip.id > since_id)
+        .order_by(Tip.id.asc())
+        .limit(100)
+    ).all()
+    items: list[TipItem] = []
+    max_id = since_id
+    for tip in rows:
+        from_u = db.scalar(select(User).where(User.id == tip.from_user_id))
+        name = from_u.username if from_u else '?'
+        items.append(
+            TipItem(
+                id=tip.id,
+                room_name=tip.room_name,
+                from_user_id=tip.from_user_id,
+                from_display_name=name,
+                to_user_id=tip.to_user_id,
+                amount=tip.amount,
+                vibrate_strength=tip.vibrate_strength,
+                vibrate_seconds=tip.vibrate_seconds,
+                created_at_iso=tip.created_at.isoformat(),
+            )
+        )
+        max_id = max(max_id, tip.id)
+    return TipInboxResponse(items=items, max_id=max_id)
 
 
 @router.get('/rooms')

@@ -46,6 +46,19 @@
   let lastViewerCount = 0;
   let lastChatId = 0;
   let hasBroadcasted = false;
+  let lastTipInboxId = 0;
+  /** Skip vibrating for tips that existed before this session (first poll only). */
+  let tipInboxPrimed = false;
+  /** @type {ReturnType<typeof setInterval> | null} */
+  let tipPollTimer = null;
+  /** @type {any} */
+  let lovenseApi = null;
+
+  const tipPanel = document.getElementById('tipPanel');
+  const tipForm = document.getElementById('tipForm');
+  const tipAmountEl = document.getElementById('tipAmount');
+  const tokenBalanceEl = document.getElementById('tokenBalance');
+  const tipHintEl = document.getElementById('tipHint');
 
   function jwtPayload(jwt) {
     const parts = String(jwt).split('.');
@@ -566,11 +579,19 @@
       if (btnStartBroadcast) btnStartBroadcast.disabled = true;
       setLiveBadgeVisible(false);
       stopChatPolling();
+      stopTipInboxPolling();
+      tipInboxPrimed = false;
+      lastTipInboxId = 0;
+      lovenseApi = null;
     });
 
   btnLeave.addEventListener('click', () => {
     stopBroadcastHeartbeat();
     stopChatPolling();
+    stopTipInboxPolling();
+    tipInboxPrimed = false;
+    lastTipInboxId = 0;
+    lovenseApi = null;
     stopRawStream();
     room.disconnect();
     if (wantsPublish && hasBroadcasted && postBroadcastModal) {
@@ -691,6 +712,8 @@
       if (wantsPublish) {
         setStatus('Connected — Step 1 (camera test) anytime, then Step 2');
         if (btnStartBroadcast) btnStartBroadcast.disabled = false;
+        initLovenseForBroadcaster().catch((err) => console.warn('Lovense', err));
+        startTipInboxPolling();
       } else {
         setStatus('Connected · watching (viewer)');
       }
@@ -720,6 +743,149 @@
   function getAuthHeaders() {
     const token = localStorage.getItem(TOKEN_KEY);
     return token ? { Authorization: `Bearer ${token}` } : {};
+  }
+
+  function stopTipInboxPolling() {
+    if (tipPollTimer) {
+      clearInterval(tipPollTimer);
+      tipPollTimer = null;
+    }
+  }
+
+  async function initLovenseForBroadcaster() {
+    if (!wantsPublish || typeof window.LovenseBasicSdk !== 'function') return;
+    const appToken = localStorage.getItem(TOKEN_KEY);
+    if (!appToken) return;
+    try {
+      const cfgRes = await fetch(`${API_BASE}/lovense/client-config`);
+      const cfg = await cfgRes.json();
+      if (!cfg.sdk_enabled) return;
+      const authRes = await fetch(`${API_BASE}/lovense/auth-token`, { headers: { ...getAuthHeaders() } });
+      if (!authRes.ok) return;
+      const authData = await authRes.json();
+      const basic = new window.LovenseBasicSdk({
+        platform: authData.platform,
+        authToken: authData.auth_token,
+        uid: String(authData.uid),
+      });
+      basic.on('ready', (instance) => {
+        lovenseApi = instance;
+      });
+      basic.on('sdkError', (data) => {
+        console.warn('Lovense sdkError', data);
+      });
+    } catch (err) {
+      console.warn('Lovense init failed', err);
+    }
+  }
+
+  async function pollTipsInboxOnce() {
+    const appToken = localStorage.getItem(TOKEN_KEY);
+    if (!wantsPublish || !appToken) return;
+    try {
+      const res = await fetch(`${API_BASE}/tips/inbox?since_id=${lastTipInboxId}`, {
+        headers: { ...getAuthHeaders() },
+      });
+      if (!res.ok) return;
+      const data = await res.json();
+      const items = Array.isArray(data.items) ? data.items : [];
+      if (typeof data.max_id === 'number') {
+        lastTipInboxId = Math.max(lastTipInboxId, data.max_id);
+      }
+      for (const tip of items) {
+        lastTipInboxId = Math.max(lastTipInboxId, Number(tip.id) || 0);
+      }
+      if (!tipInboxPrimed) {
+        tipInboxPrimed = true;
+        return;
+      }
+      for (const tip of items) {
+        if (lovenseApi && typeof lovenseApi.sendToyCommand === 'function') {
+          try {
+            await lovenseApi.sendToyCommand({
+              vibrate: tip.vibrate_strength,
+              time: tip.vibrate_seconds,
+            });
+          } catch (err) {
+            console.warn('Lovense sendToyCommand', err);
+          }
+        }
+      }
+    } catch (err) {
+      console.warn('tips inbox poll', err);
+    }
+  }
+
+  function startTipInboxPolling() {
+    stopTipInboxPolling();
+    if (!wantsPublish || !localStorage.getItem(TOKEN_KEY)) return;
+    pollTipsInboxOnce();
+    tipPollTimer = setInterval(() => pollTipsInboxOnce(), 2000);
+  }
+
+  async function refreshTokenBalance() {
+    if (!tokenBalanceEl) return;
+    const token = localStorage.getItem(TOKEN_KEY);
+    if (!token) {
+      tokenBalanceEl.textContent = '—';
+      return;
+    }
+    try {
+      const res = await fetch(`${API_BASE}/users/me`, { headers: { ...getAuthHeaders() } });
+      if (!res.ok) return;
+      const u = await res.json();
+      tokenBalanceEl.textContent = String(u.token_balance ?? '—');
+    } catch (_) {
+      /* ignore */
+    }
+  }
+
+  if (tipPanel && !wantsPublish) {
+    const appTok = localStorage.getItem(TOKEN_KEY);
+    if (appTok) {
+      tipPanel.hidden = false;
+      refreshTokenBalance();
+    }
+  }
+
+  if (tipForm && tipAmountEl && !wantsPublish) {
+    tipForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const token = localStorage.getItem(TOKEN_KEY);
+      if (!token) {
+        if (tipHintEl) tipHintEl.textContent = 'Sign in to send tips.';
+        return;
+      }
+      const amount = Number(tipAmountEl.value);
+      if (!Number.isFinite(amount) || amount < 1) return;
+      if (tipHintEl) tipHintEl.textContent = 'Sending…';
+      try {
+        const res = await fetch(`${API_BASE}/tips`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...getAuthHeaders(),
+          },
+          body: JSON.stringify({ room_name: roomName, amount: Math.floor(amount) }),
+        });
+        const text = await res.text();
+        if (!res.ok) {
+          let detail = text;
+          try {
+            const j = JSON.parse(text);
+            detail = j.detail || text;
+          } catch (_) {
+            /* ignore */
+          }
+          if (tipHintEl) tipHintEl.textContent = typeof detail === 'string' ? detail : 'Tip failed';
+          return;
+        }
+        if (tipHintEl) tipHintEl.textContent = 'Tip sent — thank you!';
+        await refreshTokenBalance();
+      } catch (err) {
+        if (tipHintEl) tipHintEl.textContent = 'Network error';
+      }
+    });
   }
 
   function captureLocalPreviewDataURL() {
@@ -776,6 +942,7 @@
   window.addEventListener('beforeunload', () => {
     stopBroadcastHeartbeat();
     stopChatPolling();
+    stopTipInboxPolling();
   });
 
   async function fetchChatForTranscript() {

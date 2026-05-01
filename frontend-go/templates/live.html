@@ -53,6 +53,16 @@
         <div id="videoGrid" class="video-grid"></div>
       </div>
       <aside class="chat-panel">
+        <section id="tipPanel" class="tip-panel" hidden>
+          <h3>Tip broadcaster</h3>
+          <p class="hint">Balance: <strong id="tokenBalance">—</strong> tokens</p>
+          <form id="tipForm" class="tip-form">
+            <label class="visually-hidden" for="tipAmount">Tip amount</label>
+            <input id="tipAmount" type="number" min="1" step="1" value="50" required />
+            <button type="submit" class="primary">Send tip</button>
+          </form>
+          <p id="tipHint" class="hint"></p>
+        </section>
         <h2>Live chat</h2>
         <p id="chatHint" class="hint">Signed-in users post with their name. Guests post as Viewer1, Viewer2, … (no account needed).</p>
         <div id="chatMessages" class="chat-messages" aria-live="polite"></div>
@@ -93,6 +103,7 @@
     </div>
   </main>
   <script>window.CAMME_API_BASE = {{jsString .APIPrefix}};</script>
+  <script src="https://api.lovense-api.com/basic-sdk/core.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/livekit-client@2.18.6/dist/livekit-client.umd.min.js"></script>
   <script src="/static/live.js"></script>
 </body>

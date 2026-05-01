@@ -23,5 +23,13 @@ class Settings(BaseSettings):
     stripe_secret_key: str = 'sk_test_replace_me'
     allowed_origins: str = 'http://localhost:8080'
 
+    # Lovense Standard API — developer dashboard: https://developer.lovense.com
+    # LOVENSE_TOKEN = developer token (server-side only). LOVENSE_PLATFORM = Website Name in dashboard.
+    # LOVENSE_AES_KEY / LOVENSE_AES_IV = Viewer JS startControl (optional); Standard JS getToken does not use AES.
+    lovense_token: str = ''
+    lovense_platform: str = ''
+    lovense_aes_key: str = ''
+    lovense_aes_iv: str = ''
+
 
 settings = Settings()

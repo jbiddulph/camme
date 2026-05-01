@@ -7,6 +7,7 @@ CREATE TABLE IF NOT EXISTS camme_users (
     username VARCHAR(40) NOT NULL,
     email VARCHAR(255) NOT NULL UNIQUE,
     password_hash VARCHAR(255) NOT NULL,
+    token_balance INTEGER NOT NULL DEFAULT 1000,
     created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
 );
 
@@ -60,3 +61,22 @@ CREATE TABLE IF NOT EXISTS camme_chat_messages (
 CREATE INDEX IF NOT EXISTS ix_camme_chat_messages_room_name ON camme_chat_messages (room_name);
 CREATE INDEX IF NOT EXISTS ix_camme_chat_messages_user_id ON camme_chat_messages (user_id);
 CREATE INDEX IF NOT EXISTS ix_camme_chat_messages_created_at ON camme_chat_messages (created_at);
+
+CREATE TABLE IF NOT EXISTS camme_tips (
+    id SERIAL PRIMARY KEY,
+    from_user_id INTEGER NOT NULL REFERENCES camme_users (id),
+    to_user_id INTEGER NOT NULL REFERENCES camme_users (id),
+    room_name VARCHAR(80) NOT NULL,
+    amount INTEGER NOT NULL CHECK (amount > 0),
+    vibrate_strength INTEGER NOT NULL,
+    vibrate_seconds INTEGER NOT NULL,
+    idempotency_key VARCHAR(64),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS ix_camme_tips_to_user ON camme_tips (to_user_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS ix_camme_tips_from_user ON camme_tips (from_user_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS ix_camme_tips_room ON camme_tips (room_name);
+CREATE UNIQUE INDEX IF NOT EXISTS uq_camme_tips_idempotency
+    ON camme_tips (from_user_id, idempotency_key)
+    WHERE idempotency_key IS NOT NULL;

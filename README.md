@@ -17,6 +17,12 @@ Camme is a starter social cam + chat web app architecture using:
 - `frontend-go/` - Go web application server and templates
 - `infra/` - Local development infrastructure (Postgres, Redis, LiveKit)
 
+## Lovense (tips → toy vibration)
+
+- Set **`LOVENSE_TOKEN`** (developer token) and **`LOVENSE_PLATFORM`** (Website Name from the Lovense developer dashboard) on the API. Optional: **`LOVENSE_AES_KEY`** / **`LOVENSE_AES_IV`** for [Viewer JS `startControl`](https://developer.lovense.com/docs/cam-solutions/viewer-js) (`POST /api/v1/lovense/viewer-control-target`).
+- New users get **1000** `token_balance` (column on `camme_users`). Run **`backend/sql/migration_lovense_tokens.sql`** on existing databases.
+- Tippers: signed-in viewers use **`POST /api/v1/tips`** (see `/live` tip panel). Broadcasters poll **`GET /api/v1/tips/inbox`**; the page loads the [Standard JS SDK](https://developer.lovense.com/docs/standard-solutions/standard-js-sdk.html) and calls `sendToyCommand` when new tips arrive.
+
 ## Quick Start
 
 ### 1) Start infra

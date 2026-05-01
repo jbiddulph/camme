@@ -172,6 +172,39 @@ button.primary {
   overflow-x: hidden;
 }
 
+.tip-panel {
+  background: #1a1025;
+  border: 1px solid #7c3aed;
+  border-radius: 10px;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.tip-panel h3 {
+  margin: 0 0 0.5rem;
+  font-size: 1rem;
+}
+
+.tip-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  margin-bottom: 0.35rem;
+}
+
+.tip-form input {
+  flex: 1;
+  min-width: 80px;
+  max-width: 120px;
+  background: #0d1117;
+  border: 1px solid #30363d;
+  color: #e5e7eb;
+  border-radius: 8px;
+  padding: 0.5rem;
+  font-size: 16px;
+}
+
 .chat-panel h2,
 .chat-panel h3 {
   margin: 0 0 0.6rem;
