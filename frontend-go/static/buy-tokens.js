@@ -220,6 +220,10 @@
 
     setupCustomPurchase(data, token);
     renderPresetPackages(data, token);
+
+    if (params.get('paid') === '1') {
+      window.dispatchEvent(new Event('camme-wallet-refresh'));
+    }
   }
 
   load();

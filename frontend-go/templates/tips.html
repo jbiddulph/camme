@@ -12,8 +12,8 @@
   <main class="container full-width tips-page">
     <h1>Tips &amp; earnings</h1>
     <p class="hint">
-      Tips you receive while broadcasting are listed here. Each tip token credits your earnings balance at the rate shown below.
-      <strong>Your wallet &ldquo;token balance&rdquo;</strong> (for tipping others) is separate — see <a href="/auth">account</a> / live page.
+      Tips you receive while broadcasting are listed here. Each tip token credits your earnings balance in £ at the rate shown below.
+      <strong>Viewer tipping wallets</strong> (tokens people buy to tip you) are separate — logged-in viewers see that balance in the purple bar under the site header and on the live tipping panel.
       Viewers add tokens via <a href="/buy-tokens">Buy tokens</a>.
     </p>
 
@@ -55,6 +55,7 @@
     </section>
   </main>
   <script>window.CAMME_API_BASE = {{jsString .APIPrefix}};</script>
+  <script src="/static/wallet-header.js"></script>
   <script src="/static/site-nav.js"></script>
   <script src="/static/tips.js"></script>
 </body>

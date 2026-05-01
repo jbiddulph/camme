@@ -50,7 +50,8 @@
     <p class="hint">API docs: <a id="docsLink" href="#" target="_blank" rel="noopener">OpenAPI</a></p>
   </main>
   <script>
-    const API_BASE = {{jsString .APIPrefix}};
+    window.CAMME_API_BASE = {{jsString .APIPrefix}};
+    const API_BASE = window.CAMME_API_BASE;
     document.getElementById('docsLink').href = {{jsString .BackendURL}} + '/docs';
     const TOKEN_KEY = 'camme_access_token';
     const authStateEl = document.getElementById('authState');
@@ -103,6 +104,7 @@
     btnLogout.addEventListener('click', () => {
       localStorage.removeItem(TOKEN_KEY);
       renderAuthState();
+      window.dispatchEvent(new Event('camme-wallet-refresh'));
     });
 
     async function postAuth(path, body, outEl) {
@@ -146,6 +148,7 @@
     setAuthTab(false);
     renderAuthState();
   </script>
+  <script src="/static/wallet-header.js"></script>
   <script src="/static/site-nav.js"></script>
 </body>
 </html>

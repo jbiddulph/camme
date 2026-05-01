@@ -58,18 +58,19 @@ function renderHomeAuthState() {
     if (drawerHomeLogout) drawerHomeLogout.hidden = false;
     if (btnStartBroadcastPublic) btnStartBroadcastPublic.disabled = false;
     if (btnStartBroadcastPrivate) btnStartBroadcastPrivate.disabled = false;
-    return;
+  } else {
+    const guestHtml = 'Not signed in · <a href="/auth">Sign in</a>';
+    if (homeAuthState) homeAuthState.innerHTML = guestHtml;
+    if (drawerHomeAuthStatus) {
+      drawerHomeAuthStatus.innerHTML = '<strong>Status</strong>' + guestHtml;
+    }
+    if (drawerHomeLogin) drawerHomeLogin.hidden = false;
+    if (drawerHomeProfile) drawerHomeProfile.hidden = true;
+    if (drawerHomeLogout) drawerHomeLogout.hidden = true;
+    if (btnStartBroadcastPublic) btnStartBroadcastPublic.disabled = true;
+    if (btnStartBroadcastPrivate) btnStartBroadcastPrivate.disabled = true;
   }
-  const guestHtml = 'Not signed in · <a href="/auth">Sign in</a>';
-  if (homeAuthState) homeAuthState.innerHTML = guestHtml;
-  if (drawerHomeAuthStatus) {
-    drawerHomeAuthStatus.innerHTML = '<strong>Status</strong>' + guestHtml;
-  }
-  if (drawerHomeLogin) drawerHomeLogin.hidden = false;
-  if (drawerHomeProfile) drawerHomeProfile.hidden = true;
-  if (drawerHomeLogout) drawerHomeLogout.hidden = true;
-  if (btnStartBroadcastPublic) btnStartBroadcastPublic.disabled = true;
-  if (btnStartBroadcastPrivate) btnStartBroadcastPrivate.disabled = true;
+  window.dispatchEvent(new Event('camme-wallet-refresh'));
 }
 
 if (drawerHomeLogout) {

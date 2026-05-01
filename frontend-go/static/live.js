@@ -851,7 +851,9 @@
       const res = await fetch(`${API_BASE}/users/me`, { headers: { ...getAuthHeaders() } });
       if (!res.ok) return;
       const u = await res.json();
-      tokenBalanceEl.textContent = String(u.token_balance ?? '—');
+      const bal = u.token_balance;
+      tokenBalanceEl.textContent = String(bal ?? '—');
+      window.dispatchEvent(new CustomEvent('camme-wallet-refresh', { detail: { balance: bal } }));
     } catch (_) {
       /* ignore */
     }

@@ -44,6 +44,60 @@ body {
   text-align: right;
 }
 
+.nav-wallet-strip {
+  border-bottom: 1px solid #30363d;
+  background: #111827;
+  padding: 0.45rem 0;
+  font-size: 0.8rem;
+  line-height: 1.45;
+  color: #d8b4fe;
+}
+
+.nav-wallet-strip-inner.container {
+  padding-top: 0.35rem;
+  padding-bottom: 0.35rem;
+}
+
+.nav-wallet-main {
+  display: inline;
+  color: #e9d5ff;
+}
+
+.nav-wallet-main a {
+  color: #a78bfa;
+  text-decoration: none;
+}
+
+.nav-wallet-main a:hover {
+  text-decoration: underline;
+}
+
+.nav-wallet-sub {
+  display: block;
+  margin-top: 0.35rem;
+  font-size: 0.75rem;
+  color: #9ca3af;
+}
+
+.nav-wallet-sub a {
+  color: #a78bfa;
+}
+
+.nav-drawer-wallet {
+  margin: 0.5rem 0 0.75rem;
+  padding: 0.5rem 0.65rem;
+  font-size: 0.82rem;
+  line-height: 1.4;
+  color: #d8b4fe;
+  background: #111827;
+  border-radius: 8px;
+  border: 1px solid #30363d;
+}
+
+.nav-drawer-wallet a {
+  color: #a78bfa;
+}
+
 .header-inline-nav {
   font-size: 0.82rem;
   color: #9ca3af;

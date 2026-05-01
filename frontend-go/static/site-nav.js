@@ -37,16 +37,17 @@
       if (drawerHomeLogin) drawerHomeLogin.hidden = true;
       if (drawerHomeProfile) drawerHomeProfile.hidden = false;
       if (drawerHomeLogout) drawerHomeLogout.hidden = false;
-      return;
+    } else {
+      const guestHtml = 'Not signed in · <a href="/auth">Sign in</a>';
+      if (homeAuthState) homeAuthState.innerHTML = guestHtml;
+      if (drawerHomeAuthStatus) {
+        drawerHomeAuthStatus.innerHTML = '<strong>Status</strong>' + guestHtml;
+      }
+      if (drawerHomeLogin) drawerHomeLogin.hidden = false;
+      if (drawerHomeProfile) drawerHomeProfile.hidden = true;
+      if (drawerHomeLogout) drawerHomeLogout.hidden = true;
     }
-    const guestHtml = 'Not signed in · <a href="/auth">Sign in</a>';
-    if (homeAuthState) homeAuthState.innerHTML = guestHtml;
-    if (drawerHomeAuthStatus) {
-      drawerHomeAuthStatus.innerHTML = '<strong>Status</strong>' + guestHtml;
-    }
-    if (drawerHomeLogin) drawerHomeLogin.hidden = false;
-    if (drawerHomeProfile) drawerHomeProfile.hidden = true;
-    if (drawerHomeLogout) drawerHomeLogout.hidden = true;
+    window.dispatchEvent(new Event('camme-wallet-refresh'));
   }
 
   document.body.addEventListener('click', (e) => {

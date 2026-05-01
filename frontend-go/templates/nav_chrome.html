@@ -7,6 +7,10 @@
         <button type="button" class="nav-drawer-close" data-close-drawer aria-label="Close menu">&times;</button>
       </div>
       <p id="drawerHomeAuthStatus" class="nav-drawer-status" aria-live="polite"></p>
+      <p id="drawerWalletLine" class="nav-drawer-wallet" hidden>
+        <strong id="drawerWalletBalance">—</strong> tokens to tip on stream ·
+        <a href="/buy-tokens">Top up</a>
+      </p>
       <p class="nav-drawer-section-label">Account &amp; tools</p>
       <a class="nav-drawer-link" href="/">Home</a>
       <a class="nav-drawer-link" href="/auth" id="drawerHomeLogin">Login / Sign up</a>
@@ -39,4 +43,16 @@
       </button>
     </div>
   </header>
+  <div id="navWalletStrip" class="nav-wallet-strip" hidden role="status" aria-live="polite">
+    <div class="nav-wallet-strip-inner container">
+      <span class="nav-wallet-main">
+        Tipping wallet: <strong id="navWalletBalance">—</strong> tokens ·
+        <a href="/buy-tokens">Buy more</a>
+      </span>
+      <span class="nav-wallet-sub">
+        Spend these on live tips. Hosts earn a fixed £ amount per tipped token (see
+        <a href="/tips">Tips &amp; earnings</a>); what you pay per token includes platform fees.
+      </span>
+    </div>
+  </div>
 {{end}}
