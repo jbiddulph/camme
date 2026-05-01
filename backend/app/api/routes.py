@@ -119,6 +119,7 @@ def register(payload: RegisterRequest, db: Session = Depends(get_db)) -> AuthRes
         username=payload.username,
         email=payload.email,
         password_hash=hash_password(payload.password),
+        token_balance=1000,
     )
     db.add(user)
     try:

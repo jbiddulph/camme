@@ -23,6 +23,8 @@ Camme is a starter social cam + chat web app architecture using:
 - New users get **1000** `token_balance` (column on `camme_users`). Run **`backend/sql/migration_lovense_tokens.sql`** on existing databases.
 - Tippers: signed-in viewers use **`POST /api/v1/tips`** (see `/live` tip panel). Broadcasters poll **`GET /api/v1/tips/inbox`**; the page loads the [Standard JS SDK](https://developer.lovense.com/docs/standard-solutions/standard-js-sdk.html) and calls `sendToyCommand` when new tips arrive.
 
+**How Camme links a broadcaster to Lovense (not your Lovense app “username”):** the API calls Lovense `getToken` with **`uid = str(camme_user.id)`** and **`uname = camme_username`** (see `POST /api/v1/lovense/auth-token`). Lovense ties the browser SDK session to that **`uid`** under **your** developer token + **platform** (website name). The toy is controlled when **Lovense Connect** is running and associated with that same integration; you do **not** need the Camme username to match a Lovense nickname. Tips are delivered in-app via your API (`tips/inbox`); `sendToyCommand` runs in the broadcaster’s browser on that SDK session.
+
 ## Quick Start
 
 ### 1) Start infra

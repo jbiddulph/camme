@@ -59,6 +59,10 @@
   const tipAmountEl = document.getElementById('tipAmount');
   const tokenBalanceEl = document.getElementById('tokenBalance');
   const tipHintEl = document.getElementById('tipHint');
+  const tipReceivedBanner = document.getElementById('tipReceivedBanner');
+  const tipSubmitBtn = document.getElementById('tipSubmitBtn');
+  const tipQuickRow = document.getElementById('tipQuickRow');
+  const tipSignInCta = document.getElementById('tipSignInCta');
 
   function jwtPayload(jwt) {
     const parts = String(jwt).split('.');
@@ -716,6 +720,7 @@
         startTipInboxPolling();
       } else {
         setStatus('Connected · watching (viewer)');
+        configureViewerTipPanel();
       }
       updateViewerCountUI();
       renderParticipants();
@@ -779,6 +784,17 @@
     }
   }
 
+  function showTipReceived(tip) {
+    if (!tipReceivedBanner) return;
+    const who = tip.from_display_name || 'Someone';
+    tipReceivedBanner.textContent = `${who} tipped ${tip.amount} tokens!`;
+    tipReceivedBanner.hidden = false;
+    clearTimeout(window.__cammeTipBannerTimer);
+    window.__cammeTipBannerTimer = setTimeout(() => {
+      tipReceivedBanner.hidden = true;
+    }, 6000);
+  }
+
   async function pollTipsInboxOnce() {
     const appToken = localStorage.getItem(TOKEN_KEY);
     if (!wantsPublish || !appToken) return;
@@ -800,6 +816,7 @@
         return;
       }
       for (const tip of items) {
+        showTipReceived(tip);
         if (lovenseApi && typeof lovenseApi.sendToyCommand === 'function') {
           try {
             await lovenseApi.sendToyCommand({
@@ -840,19 +857,58 @@
     }
   }
 
-  if (tipPanel && !wantsPublish) {
-    const appTok = localStorage.getItem(TOKEN_KEY);
-    if (appTok) {
-      tipPanel.hidden = false;
-      refreshTokenBalance();
+  function formatApiError(text, res) {
+    try {
+      const j = JSON.parse(text);
+      if (Array.isArray(j.detail)) {
+        return j.detail
+          .map((x) => (typeof x === 'object' && x.msg ? x.msg : String(x)))
+          .join('; ');
+      }
+      if (typeof j.detail === 'string') return j.detail;
+    } catch (_) {
+      /* ignore */
     }
+    return `${res.status} ${text.slice(0, 160)}`;
+  }
+
+  function configureViewerTipPanel() {
+    if (!tipPanel || wantsPublish) return;
+    tipPanel.hidden = false;
+    const authTok = localStorage.getItem(TOKEN_KEY);
+    if (!authTok) {
+      if (tipForm) tipForm.hidden = true;
+      if (tipQuickRow) tipQuickRow.hidden = true;
+      if (tipSignInCta) tipSignInCta.hidden = false;
+      if (tipHintEl) {
+        tipHintEl.textContent =
+          'Create an account to receive 1,000 tokens and tip hosts.';
+      }
+      if (tokenBalanceEl) tokenBalanceEl.textContent = '—';
+      if (tipSubmitBtn) tipSubmitBtn.disabled = true;
+      return;
+    }
+    if (tipForm) tipForm.hidden = false;
+    if (tipQuickRow) tipQuickRow.hidden = false;
+    if (tipSignInCta) tipSignInCta.hidden = true;
+    if (tipSubmitBtn) tipSubmitBtn.disabled = false;
+    refreshTokenBalance();
+  }
+
+  if (tipQuickRow) {
+    tipQuickRow.addEventListener('click', (e) => {
+      const btn = e.target.closest('.tip-quick');
+      if (!btn || !tipAmountEl) return;
+      const v = btn.getAttribute('data-tip');
+      if (v) tipAmountEl.value = v;
+    });
   }
 
   if (tipForm && tipAmountEl && !wantsPublish) {
     tipForm.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const token = localStorage.getItem(TOKEN_KEY);
-      if (!token) {
+      const authToken = localStorage.getItem(TOKEN_KEY);
+      if (!authToken) {
         if (tipHintEl) tipHintEl.textContent = 'Sign in to send tips.';
         return;
       }
@@ -870,14 +926,7 @@
         });
         const text = await res.text();
         if (!res.ok) {
-          let detail = text;
-          try {
-            const j = JSON.parse(text);
-            detail = j.detail || text;
-          } catch (_) {
-            /* ignore */
-          }
-          if (tipHintEl) tipHintEl.textContent = typeof detail === 'string' ? detail : 'Tip failed';
+          if (tipHintEl) tipHintEl.textContent = formatApiError(text, res);
           return;
         }
         if (tipHintEl) tipHintEl.textContent = 'Tip sent — thank you!';
@@ -887,6 +936,8 @@
       }
     });
   }
+
+  configureViewerTipPanel();
 
   function captureLocalPreviewDataURL() {
     const localVideo = gridEl.querySelector('.video-tile video');

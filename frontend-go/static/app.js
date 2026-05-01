@@ -34,27 +34,37 @@ if (btnHomeNavToggle && homeNavDrawer) {
   btnHomeNavToggle.addEventListener('click', () => setHomeDrawerOpen(!!homeNavDrawer.hidden));
 }
 
+const drawerHomeAuthStatus = document.getElementById('drawerHomeAuthStatus');
+
+document.body.addEventListener('click', (e) => {
+  const link = e.target.closest('a.js-home-logout');
+  if (!link) return;
+  e.preventDefault();
+  localStorage.removeItem(TOKEN_KEY);
+  renderHomeAuthState();
+});
+
 function renderHomeAuthState() {
-  if (!homeAuthState) return;
   const token = localStorage.getItem(TOKEN_KEY);
   if (token) {
-    homeAuthState.innerHTML = 'Logged in · <a href="#" id="homeLogoutLink">Log out</a>';
+    const headerHtml = 'Logged in · <a href="#" class="js-home-logout">Log out</a>';
+    if (homeAuthState) homeAuthState.innerHTML = headerHtml;
+    if (drawerHomeAuthStatus) {
+      drawerHomeAuthStatus.innerHTML =
+        '<strong>Status</strong>' + headerHtml;
+    }
     if (drawerHomeLogin) drawerHomeLogin.hidden = true;
     if (drawerHomeProfile) drawerHomeProfile.hidden = false;
     if (drawerHomeLogout) drawerHomeLogout.hidden = false;
     if (btnStartBroadcastPublic) btnStartBroadcastPublic.disabled = false;
     if (btnStartBroadcastPrivate) btnStartBroadcastPrivate.disabled = false;
-    const logout = document.getElementById('homeLogoutLink');
-    if (logout) {
-      logout.addEventListener('click', (e) => {
-        e.preventDefault();
-        localStorage.removeItem(TOKEN_KEY);
-        renderHomeAuthState();
-      });
-    }
     return;
   }
-  homeAuthState.innerHTML = 'Not signed in · <a href="/auth">Sign in</a>';
+  const guestHtml = 'Not signed in · <a href="/auth">Sign in</a>';
+  if (homeAuthState) homeAuthState.innerHTML = guestHtml;
+  if (drawerHomeAuthStatus) {
+    drawerHomeAuthStatus.innerHTML = '<strong>Status</strong>' + guestHtml;
+  }
   if (drawerHomeLogin) drawerHomeLogin.hidden = false;
   if (drawerHomeProfile) drawerHomeProfile.hidden = true;
   if (drawerHomeLogout) drawerHomeLogout.hidden = true;

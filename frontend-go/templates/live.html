@@ -18,6 +18,7 @@
       <p id="liveStatus" class="muted">Connecting…</p>
       <p id="viewerCount" class="muted">Viewers: 0</p>
       <span id="liveBadge" class="live-badge" hidden>Broadcasting Live</span>
+      <p id="tipReceivedBanner" class="tip-received-banner" hidden aria-live="polite"></p>
       <div class="live-actions">
         <button type="button" id="btnHelp" class="secondary" aria-label="Open help">?</button>
         <a class="link-home" href="/">← Home</a>
@@ -54,14 +55,23 @@
       </div>
       <aside class="chat-panel">
         <section id="tipPanel" class="tip-panel" hidden>
-          <h3>Tip broadcaster</h3>
-          <p class="hint">Balance: <strong id="tokenBalance">—</strong> tokens</p>
+          <h3>Tip the broadcaster</h3>
+          <p class="hint">Use your Camme token balance. Tips notify the host and trigger Lovense vibration when their toy is connected.</p>
+          <p class="hint">Your balance: <strong id="tokenBalance">—</strong> tokens</p>
+          <div id="tipQuickRow" class="tip-quick-row">
+            <span class="tip-quick-label">Quick:</span>
+            <button type="button" class="secondary tip-quick" data-tip="25">25</button>
+            <button type="button" class="secondary tip-quick" data-tip="50">50</button>
+            <button type="button" class="secondary tip-quick" data-tip="100">100</button>
+            <button type="button" class="secondary tip-quick" data-tip="250">250</button>
+          </div>
           <form id="tipForm" class="tip-form">
             <label class="visually-hidden" for="tipAmount">Tip amount</label>
             <input id="tipAmount" type="number" min="1" step="1" value="50" required />
-            <button type="submit" class="primary">Send tip</button>
+            <button type="submit" class="primary" id="tipSubmitBtn">Send tip</button>
           </form>
           <p id="tipHint" class="hint"></p>
+          <p id="tipSignInCta" class="hint" hidden>No account? <a href="/auth">Sign in or register</a> to get tokens and tip.</p>
         </section>
         <h2>Live chat</h2>
         <p id="chatHint" class="hint">Signed-in users post with their name. Guests post as Viewer1, Viewer2, … (no account needed).</p>

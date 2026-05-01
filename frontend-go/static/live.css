@@ -205,6 +205,37 @@ button.primary {
   font-size: 16px;
 }
 
+.tip-quick-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+  margin-bottom: 0.6rem;
+}
+
+.tip-quick-label {
+  font-size: 0.8rem;
+  color: #9ca3af;
+  margin-right: 0.25rem;
+}
+
+.tip-quick {
+  padding: 0.35rem 0.65rem;
+  font-size: 0.85rem;
+}
+
+.tip-received-banner {
+  flex: 1 1 100%;
+  margin: 0.35rem 0 0;
+  padding: 0.45rem 0.75rem;
+  border-radius: 8px;
+  background: rgba(124, 58, 237, 0.25);
+  border: 1px solid #7c3aed;
+  color: #e9d5ff;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
 .chat-panel h2,
 .chat-panel h3 {
   margin: 0 0 0.6rem;
