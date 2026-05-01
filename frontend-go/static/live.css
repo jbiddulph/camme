@@ -185,6 +185,74 @@ button.primary {
   font-size: 1rem;
 }
 
+.broadcast-earnings-panel {
+  background: #0f172a;
+  border: 1px solid #334155;
+  border-radius: 10px;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.broadcast-earnings-panel h3 {
+  margin: 0 0 0.5rem;
+  font-size: 1rem;
+  color: #e2e8f0;
+}
+
+.broadcast-earnings-stats {
+  list-style: none;
+  margin: 0.5rem 0 0.35rem;
+  padding: 0;
+  font-size: 0.88rem;
+}
+
+.broadcast-earnings-stats li {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.35rem 0.75rem;
+  padding: 0.35rem 0;
+  border-bottom: 1px solid #1e293b;
+}
+
+.broadcast-earnings-stats li:last-child {
+  border-bottom: none;
+}
+
+.broadcast-earnings-k {
+  color: #94a3b8;
+}
+
+.broadcast-earnings-v {
+  color: #86efac;
+  font-weight: 600;
+}
+
+.broadcast-earnings-eligible {
+  margin: 0.5rem 0 0;
+  color: #fde68a;
+}
+
+.bcast-recent-tips {
+  margin-top: 0.65rem;
+}
+
+.bcast-recent-label {
+  margin: 0 0 0.35rem;
+}
+
+.bcast-tip-list {
+  margin: 0;
+  padding-left: 1.1rem;
+  font-size: 0.82rem;
+  color: #cbd5e1;
+  line-height: 1.45;
+}
+
+.bcast-tip-who {
+  color: #e2e8f0;
+}
+
 .tip-form {
   display: flex;
   flex-wrap: wrap;

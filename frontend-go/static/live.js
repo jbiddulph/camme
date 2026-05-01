@@ -51,6 +51,8 @@
   let tipInboxPrimed = false;
   /** @type {ReturnType<typeof setInterval> | null} */
   let tipPollTimer = null;
+  /** @type {ReturnType<typeof setInterval> | null} */
+  let earningsPollTimer = null;
   /** @type {any} */
   let lovenseApi = null;
 
@@ -63,6 +65,12 @@
   const tipSubmitBtn = document.getElementById('tipSubmitBtn');
   const tipQuickRow = document.getElementById('tipQuickRow');
   const tipSignInCta = document.getElementById('tipSignInCta');
+  const broadcastEarningsPanel = document.getElementById('broadcastEarningsPanel');
+  const bcastSumTokens = document.getElementById('bcastSumTokens');
+  const bcastSumGbp = document.getElementById('bcastSumGbp');
+  const bcastUntilPayout = document.getElementById('bcastUntilPayout');
+  const bcastEarningsEligible = document.getElementById('bcastEarningsEligible');
+  const bcastRecentTips = document.getElementById('bcastRecentTips');
 
   function jwtPayload(jwt) {
     const parts = String(jwt).split('.');
@@ -584,6 +592,7 @@
       setLiveBadgeVisible(false);
       stopChatPolling();
       stopTipInboxPolling();
+      stopBroadcastEarningsPolling();
       tipInboxPrimed = false;
       lastTipInboxId = 0;
       lovenseApi = null;
@@ -593,6 +602,7 @@
     stopBroadcastHeartbeat();
     stopChatPolling();
     stopTipInboxPolling();
+    stopBroadcastEarningsPolling();
     tipInboxPrimed = false;
     lastTipInboxId = 0;
     lovenseApi = null;
@@ -667,6 +677,7 @@
     setStatus('Broadcasting — preview below');
     setLiveBadgeVisible(true);
     hasBroadcasted = true;
+    void refreshBroadcastEarnings();
 
     room.localParticipant.videoTrackPublications.forEach((pub) => {
       if (pub.track) attachTrack(pub.track, room.localParticipant);
@@ -718,6 +729,7 @@
         if (btnStartBroadcast) btnStartBroadcast.disabled = false;
         initLovenseForBroadcaster().catch((err) => console.warn('Lovense', err));
         startTipInboxPolling();
+        startBroadcastEarningsPolling();
       } else {
         setStatus('Connected · watching (viewer)');
         configureViewerTipPanel();
@@ -755,6 +767,79 @@
       clearInterval(tipPollTimer);
       tipPollTimer = null;
     }
+  }
+
+  function stopBroadcastEarningsPolling() {
+    if (earningsPollTimer) {
+      clearInterval(earningsPollTimer);
+      earningsPollTimer = null;
+    }
+  }
+
+  function fmtMoneyGbp(n) {
+    return '£' + Number(n).toFixed(2);
+  }
+
+  async function refreshBroadcastEarnings() {
+    if (!wantsPublish || !broadcastEarningsPanel) return;
+    const appToken = localStorage.getItem(TOKEN_KEY);
+    if (!appToken) {
+      broadcastEarningsPanel.hidden = true;
+      return;
+    }
+    broadcastEarningsPanel.hidden = false;
+    try {
+      const res = await fetch(`${API_BASE}/tips/earnings?limit=6`, { headers: { ...getAuthHeaders() } });
+      if (!res.ok) return;
+      const data = await res.json();
+      const tokenVal = Number(data.token_value_gbp);
+      if (bcastSumTokens) bcastSumTokens.textContent = String(data.total_tokens_received ?? 0);
+      if (bcastSumGbp) bcastSumGbp.textContent = fmtMoneyGbp(data.total_earned_gbp);
+      if (bcastUntilPayout) {
+        bcastUntilPayout.textContent = data.payout_eligible
+          ? '£0.00 (threshold met)'
+          : fmtMoneyGbp(data.until_payout_gbp);
+      }
+      if (bcastEarningsEligible) {
+        bcastEarningsEligible.hidden = !data.payout_eligible;
+      }
+      if (bcastRecentTips) {
+        const tips = Array.isArray(data.tips) ? data.tips : [];
+        if (!tips.length) {
+          bcastRecentTips.innerHTML = '<p class="hint">No tips recorded yet.</p>';
+        } else {
+          bcastRecentTips.innerHTML =
+            '<p class="hint bcast-recent-label">Recent tips</p><ul class="bcast-tip-list">' +
+            tips
+              .map((t) => {
+                const gbp = (Number(t.amount) || 0) * tokenVal;
+                const who = t.from_display_name || '—';
+                return (
+                  '<li><span class="bcast-tip-who">' +
+                  who +
+                  '</span> · ' +
+                  t.amount +
+                  ' tokens · ' +
+                  fmtMoneyGbp(gbp) +
+                  '</li>'
+                );
+              })
+              .join('') +
+            '</ul>';
+        }
+      }
+    } catch (_) {
+      /* ignore */
+    }
+  }
+
+  function startBroadcastEarningsPolling() {
+    stopBroadcastEarningsPolling();
+    if (!wantsPublish || !localStorage.getItem(TOKEN_KEY)) return;
+    void refreshBroadcastEarnings();
+    earningsPollTimer = setInterval(() => {
+      void refreshBroadcastEarnings();
+    }, 12000);
   }
 
   async function initLovenseForBroadcaster() {
@@ -814,6 +899,9 @@
       if (!tipInboxPrimed) {
         tipInboxPrimed = true;
         return;
+      }
+      if (items.length) {
+        void refreshBroadcastEarnings();
       }
       for (const tip of items) {
         showTipReceived(tip);

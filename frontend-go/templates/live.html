@@ -53,6 +53,20 @@
         <div id="videoGrid" class="video-grid"></div>
       </div>
       <aside class="chat-panel">
+        <section id="broadcastEarningsPanel" class="broadcast-earnings-panel" hidden>
+          <h3>Your tips &amp; earnings</h3>
+          <p class="hint">
+            Overview of tips you&rsquo;ve received (same data as
+            <a href="/tips" target="_blank" rel="noopener">Tips &amp; earnings</a>). Updates when viewers tip you and every few seconds while you&rsquo;re here.
+          </p>
+          <ul class="broadcast-earnings-stats">
+            <li><span class="broadcast-earnings-k">Tip tokens received (total)</span> <strong id="bcastSumTokens" class="broadcast-earnings-v">—</strong></li>
+            <li><span class="broadcast-earnings-k">Your £ from tips</span> <strong id="bcastSumGbp" class="broadcast-earnings-v">—</strong></li>
+            <li><span class="broadcast-earnings-k">Until payout threshold</span> <strong id="bcastUntilPayout" class="broadcast-earnings-v">—</strong></li>
+          </ul>
+          <p id="bcastEarningsEligible" class="hint broadcast-earnings-eligible" hidden>Payout threshold reached — contact support to arrange payment.</p>
+          <div id="bcastRecentTips" class="bcast-recent-tips" aria-live="polite"></div>
+        </section>
         <section id="tipPanel" class="tip-panel" hidden>
           <h3>Tip the broadcaster</h3>
           <p class="hint">
