@@ -7,14 +7,44 @@
   <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
-  <header class="site-header">
+  <div id="homeNavDrawer" class="nav-drawer" hidden>
+    <div class="nav-drawer-backdrop" data-close-drawer tabindex="-1" aria-hidden="true"></div>
+    <nav class="nav-drawer-panel" aria-label="Site menu">
+      <div class="nav-drawer-head">
+        <span class="nav-drawer-title">Menu</span>
+        <button type="button" class="nav-drawer-close" data-close-drawer aria-label="Close menu">&times;</button>
+      </div>
+      <a class="nav-drawer-link" href="/">Home</a>
+      <a class="nav-drawer-link" href="/auth" id="drawerHomeLogin">Login / Sign up</a>
+      <a class="nav-drawer-link" href="/auth" id="drawerHomeProfile" hidden>Edit profile</a>
+      <a class="nav-drawer-link" href="/cam-test">Camera test</a>
+      <button type="button" class="nav-drawer-link nav-drawer-button" id="drawerHomeLogout" hidden>Log out</button>
+    </nav>
+  </div>
+
+  <header class="site-header site-header--split">
     <a href="/" class="site-brand" aria-label="Home"><img src="/static/exhibitionist.png" alt="" class="site-logo" width="280" height="52" decoding="async" /></a>
+    <div class="site-header-actions">
+      <nav class="header-inline-nav" aria-label="Quick links">
+        <a href="/auth">Login / Sign up</a>
+        <span class="header-inline-sep" aria-hidden="true">·</span>
+        <a href="/cam-test">Cam test</a>
+      </nav>
+      <p id="homeAuthState" class="header-auth-status" aria-live="polite"></p>
+      <button type="button" class="nav-hamburger" id="btnHomeNavToggle" aria-label="Open menu" aria-expanded="false" aria-controls="homeNavDrawer">
+        <span class="nav-hamburger-bar" aria-hidden="true"></span>
+        <span class="nav-hamburger-bar" aria-hidden="true"></span>
+        <span class="nav-hamburger-bar" aria-hidden="true"></span>
+      </button>
+    </div>
   </header>
+
   <main class="container full-width">
     <h1 class="visually-hidden">Home</h1>
     <p class="page-tagline">Social cam + chat starter app</p>
-    <p class="hint"><a href="/auth">Login / Sign up</a> · Trouble with the camera? Try <a href="/cam-test">/cam-test</a> first (no LiveKit).</p>
-    <p id="homeAuthState" class="hint"></p>
+    <p class="home-definition">
+      <em>An exhibitionist is someone who behaves in attention-seeking ways to make others notice them, often acting like a &ldquo;show-off&rdquo;. In a psychological context, it refers to an individual who derives sexual gratification from exposing their genitals or private areas, typically to unsuspecting strangers.</em>
+    </p>
 
     <section class="card">
       <h2>Broadcast</h2>

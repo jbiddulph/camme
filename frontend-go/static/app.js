@@ -8,11 +8,40 @@ const privateShareLink = document.getElementById('privateShareLink');
 const TOKEN_KEY = 'camme_access_token';
 const API_BASE = window.CAMME_API_BASE || '/api/v1';
 
+const homeNavDrawer = document.getElementById('homeNavDrawer');
+const btnHomeNavToggle = document.getElementById('btnHomeNavToggle');
+const drawerHomeLogin = document.getElementById('drawerHomeLogin');
+const drawerHomeProfile = document.getElementById('drawerHomeProfile');
+const drawerHomeLogout = document.getElementById('drawerHomeLogout');
+
+function setHomeDrawerOpen(open) {
+  if (!homeNavDrawer || !btnHomeNavToggle) return;
+  homeNavDrawer.hidden = !open;
+  btnHomeNavToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+  document.body.style.overflow = open ? 'hidden' : '';
+}
+
+function wireHomeDrawerCloseHandlers() {
+  if (!homeNavDrawer) return;
+  homeNavDrawer.querySelectorAll('[data-close-drawer]').forEach((el) => {
+    el.addEventListener('click', () => setHomeDrawerOpen(false));
+  });
+}
+
+wireHomeDrawerCloseHandlers();
+
+if (btnHomeNavToggle && homeNavDrawer) {
+  btnHomeNavToggle.addEventListener('click', () => setHomeDrawerOpen(!!homeNavDrawer.hidden));
+}
+
 function renderHomeAuthState() {
   if (!homeAuthState) return;
   const token = localStorage.getItem(TOKEN_KEY);
   if (token) {
-    homeAuthState.innerHTML = 'Status: <strong>Logged in</strong> · <a href="#" id="homeLogoutLink">Log out</a>';
+    homeAuthState.innerHTML = 'Logged in · <a href="#" id="homeLogoutLink">Log out</a>';
+    if (drawerHomeLogin) drawerHomeLogin.hidden = true;
+    if (drawerHomeProfile) drawerHomeProfile.hidden = false;
+    if (drawerHomeLogout) drawerHomeLogout.hidden = false;
     if (btnStartBroadcastPublic) btnStartBroadcastPublic.disabled = false;
     if (btnStartBroadcastPrivate) btnStartBroadcastPrivate.disabled = false;
     const logout = document.getElementById('homeLogoutLink');
@@ -25,9 +54,20 @@ function renderHomeAuthState() {
     }
     return;
   }
-  homeAuthState.innerHTML = 'Status: Not logged in · <a href="/auth">Sign in</a>';
+  homeAuthState.innerHTML = 'Not signed in · <a href="/auth">Sign in</a>';
+  if (drawerHomeLogin) drawerHomeLogin.hidden = false;
+  if (drawerHomeProfile) drawerHomeProfile.hidden = true;
+  if (drawerHomeLogout) drawerHomeLogout.hidden = true;
   if (btnStartBroadcastPublic) btnStartBroadcastPublic.disabled = true;
   if (btnStartBroadcastPrivate) btnStartBroadcastPrivate.disabled = true;
+}
+
+if (drawerHomeLogout) {
+  drawerHomeLogout.addEventListener('click', () => {
+    localStorage.removeItem(TOKEN_KEY);
+    setHomeDrawerOpen(false);
+    renderHomeAuthState();
+  });
 }
 
 function deriveWsUrl(httpUrl) {
