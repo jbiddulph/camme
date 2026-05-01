@@ -41,7 +41,7 @@ class Settings(BaseSettings):
     stripe_webhook_secret: str = ''
     stripe_publishable_key: str = ''
     # Absolute base URL of the public web app (for Checkout success/cancel redirects)
-    stripe_frontend_base_url: str = 'http://localhost:8080'
+    stripe_frontend_base_url: str = 'https://www.exhibitionist.me'
     # Optional JSON override for token packages: [{"id":"t100","label":"100 tokens","tokens":100,"unit_amount":499,"currency":"gbp"}, ...]
     # unit_amount = minor units (pence for gbp). If empty, built-in defaults are used.
     stripe_packages_json: str = ''
