@@ -15,6 +15,11 @@ body {
   color: #e5e7eb;
 }
 
+/* Login page already shows session in the card */
+.page-auth .header-auth-status {
+  display: none;
+}
+
 .site-header {
   padding: 0.65rem 1.25rem;
   border-bottom: 1px solid #30363d;
@@ -221,6 +226,11 @@ body {
   color: #6b7280;
 }
 
+/* Balances the hamburger column so the logo can sit visually centered on small screens */
+.nav-header-spacer {
+  display: none;
+}
+
 .home-definition {
   margin: 0 0 1.25rem;
   padding: 1rem 1.1rem;
@@ -244,10 +254,37 @@ body {
 
   .site-header--split {
     flex-wrap: nowrap;
+    align-items: center;
+    gap: 0.35rem;
+    justify-content: space-between;
+  }
+
+  .nav-header-spacer {
+    display: block;
+    flex: 0 0 44px;
+    width: 44px;
+    height: 1px;
+    flex-shrink: 0;
+  }
+
+  .site-header--split .site-brand {
+    flex: 1 1 auto;
+    justify-content: center;
+    min-width: 0;
+  }
+
+  .site-header--split .site-logo {
+    height: clamp(44px, 12vw, 60px);
+    max-width: min(300px, 82vw);
   }
 
   .site-header-actions {
-    margin-left: auto;
+    margin-left: 0;
+    flex: 0 0 44px;
+    width: 44px;
+    min-width: 44px;
+    flex-wrap: nowrap;
+    justify-content: flex-end;
   }
 }
 
@@ -260,9 +297,9 @@ body {
 
 .site-logo {
   display: block;
-  height: clamp(36px, 10vw, 52px);
+  height: clamp(40px, 10vw, 56px);
   width: auto;
-  max-width: min(280px, 50vw);
+  max-width: min(300px, 56vw);
   object-fit: contain;
 }
 

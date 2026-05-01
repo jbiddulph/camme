@@ -1,3 +1,4 @@
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -36,6 +37,16 @@ class Settings(BaseSettings):
     # unit_amount = minor units (pence for gbp). If empty, built-in defaults are used.
     stripe_packages_json: str = ''
     allowed_origins: str = 'http://localhost:8080'
+
+    @field_validator('stripe_secret_key', 'stripe_publishable_key', 'stripe_webhook_secret', mode='before')
+    @classmethod
+    def _strip_quotes_on_secrets(cls, v: object) -> object:
+        if not isinstance(v, str):
+            return v
+        s = v.strip()
+        if len(s) >= 2 and s[0] == s[-1] and s[0] in '"\'':
+            s = s[1:-1].strip()
+        return s
 
     # Lovense Standard API — developer dashboard: https://developer.lovense.com
     # LOVENSE_TOKEN = developer token (server-side only). LOVENSE_PLATFORM = Website Name in dashboard.

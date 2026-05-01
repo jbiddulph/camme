@@ -7,45 +7,7 @@
   <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
-  <div id="homeNavDrawer" class="nav-drawer" hidden>
-    <div class="nav-drawer-backdrop" data-close-drawer tabindex="-1" aria-hidden="true"></div>
-    <nav class="nav-drawer-panel" aria-label="Site menu">
-      <div class="nav-drawer-head">
-        <span class="nav-drawer-title">Menu</span>
-        <button type="button" class="nav-drawer-close" data-close-drawer aria-label="Close menu">&times;</button>
-      </div>
-      <p id="drawerHomeAuthStatus" class="nav-drawer-status" aria-live="polite"></p>
-      <p class="nav-drawer-section-label">Account &amp; tools</p>
-      <a class="nav-drawer-link" href="/">Home</a>
-      <a class="nav-drawer-link" href="/auth" id="drawerHomeLogin">Login / Sign up</a>
-      <a class="nav-drawer-link" href="/auth" id="drawerHomeProfile" hidden>Edit profile</a>
-      <a class="nav-drawer-link" href="/buy-tokens">Buy tokens</a>
-      <a class="nav-drawer-link" href="/tips">Tips &amp; earnings</a>
-      <a class="nav-drawer-link" href="/cam-test">Camera test</a>
-      <button type="button" class="nav-drawer-link nav-drawer-button" id="drawerHomeLogout" hidden>Log out</button>
-    </nav>
-  </div>
-
-  <header class="site-header site-header--split">
-    <a href="/" class="site-brand" aria-label="Home"><img src="/static/exhibitionist.png" alt="" class="site-logo" width="280" height="52" decoding="async" /></a>
-    <div class="site-header-actions">
-      <nav class="header-inline-nav" aria-label="Quick links">
-        <a href="/auth">Login / Sign up</a>
-        <span class="header-inline-sep" aria-hidden="true">·</span>
-        <a href="/buy-tokens">Buy tokens</a>
-        <span class="header-inline-sep" aria-hidden="true">·</span>
-        <a href="/tips">Tips</a>
-        <span class="header-inline-sep" aria-hidden="true">·</span>
-        <a href="/cam-test">Cam test</a>
-      </nav>
-      <p id="homeAuthState" class="header-auth-status" aria-live="polite"></p>
-      <button type="button" class="nav-hamburger" id="btnHomeNavToggle" aria-label="Open menu" aria-expanded="false" aria-controls="homeNavDrawer">
-        <span class="nav-hamburger-bar" aria-hidden="true"></span>
-        <span class="nav-hamburger-bar" aria-hidden="true"></span>
-        <span class="nav-hamburger-bar" aria-hidden="true"></span>
-      </button>
-    </div>
-  </header>
+  {{template "navChrome" .}}
 
   <main class="container full-width">
     <h1 class="visually-hidden">Home</h1>

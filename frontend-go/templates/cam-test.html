@@ -15,13 +15,10 @@
   </style>
 </head>
 <body>
-  <header class="site-header">
-    <a href="/" class="site-brand" aria-label="Home"><img src="/static/exhibitionist.png" alt="" class="site-logo" width="280" height="52" decoding="async" /></a>
-  </header>
+  {{template "navChrome" .}}
   <main class="container box">
     <h1>Camera test</h1>
     <p>No LiveKit — only your browser. If this fails, fix OS/browser permissions before using /live.</p>
-    <p><a href="/">← Home</a></p>
     <button type="button" id="go" class="primary" style="margin: 1rem 0;">Start camera</button>
     <video id="v" playsinline muted autoplay></video>
     <p id="log"></p>
@@ -56,5 +53,6 @@
       }
     };
   </script>
+  <script src="/static/site-nav.js"></script>
 </body>
 </html>

@@ -42,8 +42,11 @@ DEFAULT_PACKAGES: list[dict[str, Any]] = [
 
 
 def stripe_configured() -> bool:
+    """True if a usable Stripe secret is set (standard or restricted key)."""
     k = (settings.stripe_secret_key or '').strip()
-    return bool(k and k.startswith('sk_'))
+    if not k:
+        return False
+    return k.startswith(('sk_live_', 'sk_test_', 'rk_live_', 'rk_test_'))
 
 
 def list_packages() -> list[dict[str, Any]]:

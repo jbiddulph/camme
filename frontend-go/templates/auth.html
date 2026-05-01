@@ -7,12 +7,9 @@
   <link rel="stylesheet" href="/static/style.css">
   <link rel="stylesheet" href="/static/auth.css">
 </head>
-<body>
-  <header class="site-header">
-    <a href="/" class="site-brand" aria-label="Home"><img src="/static/exhibitionist.png" alt="" class="site-logo" width="280" height="52" decoding="async" /></a>
-  </header>
+<body class="page-auth">
+  {{template "navChrome" .}}
   <main class="container auth-page">
-    <p><a href="/">← Home</a></p>
     <h1>Login or sign up</h1>
     <p class="hint">API calls use this site’s <code>/api</code> prefix (proxied to FastAPI). Tokens are stored in <code>localStorage</code> as <code>camme_access_token</code>.</p>
 
@@ -149,5 +146,6 @@
     setAuthTab(false);
     renderAuthState();
   </script>
+  <script src="/static/site-nav.js"></script>
 </body>
 </html>
