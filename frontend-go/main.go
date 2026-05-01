@@ -225,6 +225,24 @@ func main() {
 		}
 	})
 
+	mux.HandleFunc("/tips/inbox", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+		http.Redirect(w, r, "/tips", http.StatusFound)
+	})
+
+	mux.HandleFunc("/tips", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+		if err := tmpl.ExecuteTemplate(w, "tips.html", LivePageData{APIPrefix: apiPrefix}); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+	})
+
 	mux.HandleFunc("/watch", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
 			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)

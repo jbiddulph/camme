@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Tips &amp; earnings</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <header class="site-header site-header--split">
+    <a href="/" class="site-brand" aria-label="Home"><img src="/static/exhibitionist.png" alt="" class="site-logo" width="280" height="52" decoding="async" /></a>
+    <div class="site-header-actions">
+      <nav class="header-inline-nav" aria-label="Quick links">
+        <a href="/">Home</a>
+        <span class="header-inline-sep" aria-hidden="true">·</span>
+        <a href="/auth">Account</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container full-width tips-page">
+    <h1>Tips &amp; earnings</h1>
+    <p class="hint">
+      Tips you receive while broadcasting are listed here. Each tip token credits your earnings balance at the rate shown below.
+      <strong>Your wallet &ldquo;token balance&rdquo;</strong> (for tipping others) is separate — see <a href="/auth">account</a> / live page.
+    </p>
+
+    <p id="tipsGate" class="hint" hidden>You need to <a href="/auth">sign in</a> to see tips sent to you.</p>
+    <p id="tipsError" class="error" hidden></p>
+
+    <section id="tipsSummary" class="card" hidden>
+      <h2>Summary</h2>
+      <ul class="tips-summary-list">
+        <li><span class="tips-k">Token value (to you)</span> <span id="sumTokenVal" class="tips-v"></span></li>
+        <li><span class="tips-k">Total tips received</span> <span id="sumTokens" class="tips-v"></span> tokens</li>
+        <li><span class="tips-k">Total earned</span> <span id="sumGbp" class="tips-v"></span></li>
+        <li><span class="tips-k">Payout threshold</span> <span id="sumThreshold" class="tips-v"></span></li>
+        <li><span class="tips-k">Until payout eligible</span> <span id="sumUntil" class="tips-v"></span></li>
+        <li id="sumEligible" class="tips-eligible" hidden>Payout threshold reached — contact support to arrange payment (payout flow coming soon).</li>
+      </ul>
+      <div class="tips-progress-wrap" aria-hidden="true">
+        <div id="tipsProgressBar" class="tips-progress-bar" style="width:0%"></div>
+      </div>
+    </section>
+
+    <section id="tipsTableSection" class="card" hidden>
+      <h2>Recent tips</h2>
+      <div class="tips-table-wrap">
+        <table class="tips-table" id="tipsTable">
+          <thead>
+            <tr>
+              <th scope="col">When (UTC)</th>
+              <th scope="col">From</th>
+              <th scope="col">Tokens</th>
+              <th scope="col">£ to you</th>
+              <th scope="col">Room</th>
+            </tr>
+          </thead>
+          <tbody id="tipsTableBody"></tbody>
+        </table>
+      </div>
+      <p id="tipsEmpty" class="hint" hidden>No tips recorded yet.</p>
+    </section>
+  </main>
+  <script>window.CAMME_API_BASE = {{jsString .APIPrefix}};</script>
+  <script src="/static/tips.js"></script>
+</body>
+</html>

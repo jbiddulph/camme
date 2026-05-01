@@ -4,7 +4,7 @@ import re
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Header
 from jose import JWTError, jwt
-from sqlalchemy import delete, select
+from sqlalchemy import delete, func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
@@ -27,6 +27,7 @@ from app.api.schemas import (
     TipCreateRequest,
     TipInboxResponse,
     TipItem,
+    TipsEarningsResponse,
     UserMeResponse,
     ViewerTokenResponse,
 )
@@ -119,7 +120,7 @@ def register(payload: RegisterRequest, db: Session = Depends(get_db)) -> AuthRes
         username=payload.username,
         email=payload.email,
         password_hash=hash_password(payload.password),
-        token_balance=1000,
+        token_balance=max(0, int(settings.initial_token_balance)),
     )
     db.add(user)
     try:
@@ -302,6 +303,58 @@ def tips_inbox(
         )
         max_id = max(max_id, tip.id)
     return TipInboxResponse(items=items, max_id=max_id)
+
+
+@router.get('/tips/earnings', response_model=TipsEarningsResponse)
+def tips_earnings(
+    limit: int = Query(default=100, ge=1, le=500),
+    authorization: str | None = Header(default=None, alias='Authorization'),
+    db: Session = Depends(get_db),
+) -> TipsEarningsResponse:
+    user = _current_user_from_auth(authorization, db, required=True)
+    assert user is not None
+    total_tokens = db.scalar(
+        select(func.coalesce(func.sum(Tip.amount), 0)).where(Tip.to_user_id == user.id)
+    )
+    total_tokens = int(total_tokens or 0)
+    token_val = float(settings.token_value_gbp)
+    min_payout = float(settings.payout_minimum_gbp)
+    earned_gbp = round(total_tokens * token_val, 2)
+    until_payout = round(max(0.0, min_payout - earned_gbp), 2)
+    eligible = earned_gbp >= min_payout
+
+    rows = db.scalars(
+        select(Tip).where(Tip.to_user_id == user.id).order_by(Tip.id.desc()).limit(limit)
+    ).all()
+    from_ids = {t.from_user_id for t in rows}
+    name_by_uid: dict[int, str] = {}
+    if from_ids:
+        for u in db.scalars(select(User).where(User.id.in_(from_ids))).all():
+            name_by_uid[u.id] = u.username
+    tips_out: list[TipItem] = []
+    for tip in rows:
+        tips_out.append(
+            TipItem(
+                id=tip.id,
+                room_name=tip.room_name,
+                from_user_id=tip.from_user_id,
+                from_display_name=name_by_uid.get(tip.from_user_id, '?'),
+                to_user_id=tip.to_user_id,
+                amount=tip.amount,
+                vibrate_strength=tip.vibrate_strength,
+                vibrate_seconds=tip.vibrate_seconds,
+                created_at_iso=tip.created_at.isoformat(),
+            )
+        )
+    return TipsEarningsResponse(
+        token_value_gbp=token_val,
+        payout_minimum_gbp=min_payout,
+        total_tokens_received=total_tokens,
+        total_earned_gbp=earned_gbp,
+        until_payout_gbp=until_payout,
+        payout_eligible=eligible,
+        tips=tips_out,
+    )
 
 
 @router.get('/rooms')

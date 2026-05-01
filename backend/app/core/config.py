@@ -12,6 +12,10 @@ class Settings(BaseSettings):
     postgres_dsn: str = 'postgresql+psycopg://camme:camme@localhost:5432/camme'
     # Supabase cloud (and many hosted Postgres) need TLS: set require or add ?sslmode=require to POSTGRES_DSN
     postgres_sslmode: str | None = None
+    # Token economy. INITIAL_TOKEN_BALANCE=0 when tokens are purchase-only in production.
+    initial_token_balance: int = 1000
+    token_value_gbp: float = 0.05
+    payout_minimum_gbp: float = 50.0
     db_table_prefix: str = 'camme_'
     debug: bool = False
     redis_url: str = 'redis://localhost:6379/0'

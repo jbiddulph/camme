@@ -130,3 +130,15 @@ class TipItem(BaseModel):
 class TipInboxResponse(BaseModel):
     items: list[TipItem]
     max_id: int
+
+
+class TipsEarningsResponse(BaseModel):
+    """Totals for tips received by the authenticated user (broadcaster)."""
+
+    token_value_gbp: float
+    payout_minimum_gbp: float
+    total_tokens_received: int
+    total_earned_gbp: float
+    until_payout_gbp: float
+    payout_eligible: bool
+    tips: list[TipItem]
