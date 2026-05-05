@@ -446,8 +446,9 @@ button.primary {
   }
 
   .live-header {
-    flex: 0 0 16%;
+    flex: 0 0 16dvh;
     min-height: 96px;
+    max-height: 16dvh;
     margin-bottom: 0.6rem;
     padding: 0.55rem 0.65rem;
     border: 1px solid #30363d;
@@ -457,15 +458,16 @@ button.primary {
   }
 
   .live-main {
-    flex: 0 0 84%;
+    flex: 1 1 auto;
     min-height: 0;
     grid-template-columns: 1fr;
-    grid-template-rows: 1fr 1fr;
+    grid-template-rows: minmax(0, 42dvh) minmax(0, 42dvh);
     gap: 0.6rem;
   }
 
   .live-left {
     min-height: 0;
+    height: 100%;
     padding: 0 0.2rem;
   }
 
@@ -475,8 +477,9 @@ button.primary {
   }
 
   .video-tile {
-    height: 100%;
-    aspect-ratio: auto;
+    height: auto;
+    max-height: 100%;
+    aspect-ratio: 16 / 9;
     border-radius: 14px;
   }
 
