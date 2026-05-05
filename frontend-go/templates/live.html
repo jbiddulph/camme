@@ -11,20 +11,37 @@
 <body>
   {{template "navChrome" .}}
   <main class="container live-wrap">
+    <h1 class="visually-hidden">Live</h1>
     <header class="live-header">
-      <h1>Live room</h1>
-      <p id="liveStatus" class="muted">Connecting…</p>
-      <p id="viewerCount" class="muted">Viewers: 0</p>
-      <span id="liveBadge" class="live-badge" hidden>Broadcasting Live</span>
-      <p id="tipReceivedBanner" class="tip-received-banner" hidden aria-live="polite"></p>
-      <div class="live-actions">
-        <button type="button" id="btnHelp" class="secondary" aria-label="Open help">?</button>
-        <a class="link-home" href="/">← Home</a>
-        <a class="link-home" href="/tips" target="_blank" rel="noopener">Tips &amp; earnings</a>
-        <button type="button" id="btnToggleMic" class="secondary" hidden>Mute mic</button>
-        <button type="button" id="btnToggleCam" class="secondary" hidden>Stop camera</button>
-        <button type="button" id="btnLeave" class="danger">Leave</button>
+      <div class="live-header-row">
+        <div class="live-header-meta">
+          <p id="liveStatus" class="muted live-status-line">Connecting…</p>
+          <p id="viewerCount" class="muted live-viewer-count">Viewers: 0</p>
+          <span id="liveBadge" class="live-badge" hidden>Broadcasting</span>
+        </div>
+        <div class="live-actions live-actions--toolbar" aria-label="Broadcast controls">
+          <button type="button" id="btnToggleMic" class="live-icon-btn live-icon-btn--mic" hidden aria-label="Mute microphone" title="Microphone">
+            <span class="live-icon-btn__on" aria-hidden="true">
+              <svg class="live-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 14a3 3 0 003-3V5a3 3 0 00-6 0v6a3 3 0 003 3z"/><path d="M19 11a7 7 0 01-14 0M12 19v3"/></svg>
+            </span>
+            <span class="live-icon-btn__off" aria-hidden="true" hidden>
+              <svg class="live-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 14a3 3 0 003-3V5a3 3 0 00-6 0v6a3 3 0 003 3z"/><path d="M19 11a7 7 0 01-14 0M12 19v3M2 2l20 20"/></svg>
+            </span>
+          </button>
+          <button type="button" id="btnToggleCam" class="live-icon-btn live-icon-btn--cam" hidden aria-label="Stop camera" title="Camera">
+            <span class="live-icon-btn__on" aria-hidden="true">
+              <svg class="live-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+            </span>
+            <span class="live-icon-btn__off" aria-hidden="true" hidden>
+              <svg class="live-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/><path d="M2 2l20 20"/></svg>
+            </span>
+          </button>
+          <button type="button" id="btnLeave" class="live-icon-btn live-icon-btn--leave" aria-label="Leave room" title="Leave">
+            <svg class="live-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+          </button>
+        </div>
       </div>
+      <p id="tipReceivedBanner" class="tip-received-banner" hidden aria-live="polite"></p>
     </header>
     <p id="liveError" class="error" hidden></p>
     <section id="broadcastPanel" class="broadcast-gate">
@@ -53,20 +70,6 @@
         <div id="videoGrid" class="video-grid"></div>
       </div>
       <aside class="chat-panel">
-        <section id="broadcastEarningsPanel" class="broadcast-earnings-panel" hidden>
-          <h3>Your tips &amp; earnings</h3>
-          <p class="hint">
-            Overview of tips you&rsquo;ve received (same data as
-            <a href="/tips" target="_blank" rel="noopener">Tips &amp; earnings</a>). Updates when viewers tip you and every few seconds while you&rsquo;re here.
-          </p>
-          <ul class="broadcast-earnings-stats">
-            <li><span class="broadcast-earnings-k">Tip tokens received (total)</span> <strong id="bcastSumTokens" class="broadcast-earnings-v">—</strong></li>
-            <li><span class="broadcast-earnings-k">Your £ from tips</span> <strong id="bcastSumGbp" class="broadcast-earnings-v">—</strong></li>
-            <li><span class="broadcast-earnings-k">Until payout threshold</span> <strong id="bcastUntilPayout" class="broadcast-earnings-v">—</strong></li>
-          </ul>
-          <p id="bcastEarningsEligible" class="hint broadcast-earnings-eligible" hidden>Payout threshold reached — contact support to arrange payment.</p>
-          <div id="bcastRecentTips" class="bcast-recent-tips" aria-live="polite"></div>
-        </section>
         <section id="tipPanel" class="tip-panel" hidden>
           <h3>Tip the broadcaster</h3>
           <p class="hint">

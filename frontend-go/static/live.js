@@ -25,7 +25,6 @@
   const chatInput = document.getElementById('chatInput');
   const chatHint = document.getElementById('chatHint');
   const participantListEl = document.getElementById('participantList');
-  const btnHelp = document.getElementById('btnHelp');
   const btnCloseHelp = document.getElementById('btnCloseHelp');
   const helpModal = document.getElementById('helpModal');
   const liveBadge = document.getElementById('liveBadge');
@@ -97,6 +96,13 @@
   /** Host / broadcast URL — Step 2 is relevant */
   const wantsPublish = mode === 'broadcast' || tokenAllowsPublish(token);
 
+  if (wantsPublish) {
+    document.body.id = 'camme-live-broadcast';
+  }
+
+  const livePageDrawerExtras = document.getElementById('livePageDrawerExtras');
+  if (livePageDrawerExtras) livePageDrawerExtras.hidden = false;
+
   function trimSurroundingQuotes(s) {
     let v = String(s || '').trim();
     while (v.length >= 2) {
@@ -159,7 +165,33 @@
   }
 
   function setStatus(text) {
-    statusEl.textContent = text;
+    if (statusEl) statusEl.textContent = text;
+  }
+
+  function closeSiteNavDrawer() {
+    const drawer = document.getElementById('homeNavDrawer');
+    const toggle = document.getElementById('btnHomeNavToggle');
+    if (drawer) drawer.hidden = true;
+    if (toggle) toggle.setAttribute('aria-expanded', 'false');
+    document.body.style.overflow = '';
+  }
+
+  function applyMicButtonUi(on) {
+    if (!btnToggleMic) return;
+    const onEl = btnToggleMic.querySelector('.live-icon-btn__on');
+    const offEl = btnToggleMic.querySelector('.live-icon-btn__off');
+    if (onEl) onEl.hidden = !on;
+    if (offEl) offEl.hidden = on;
+    btnToggleMic.setAttribute('aria-label', on ? 'Mute microphone' : 'Unmute microphone');
+  }
+
+  function applyCamButtonUi(on) {
+    if (!btnToggleCam) return;
+    const onEl = btnToggleCam.querySelector('.live-icon-btn__on');
+    const offEl = btnToggleCam.querySelector('.live-icon-btn__off');
+    if (onEl) onEl.hidden = !on;
+    if (offEl) offEl.hidden = on;
+    btnToggleCam.setAttribute('aria-label', on ? 'Stop camera' : 'Start camera');
   }
 
   function setLiveBadgeVisible(visible) {
@@ -241,9 +273,11 @@
   if (step2Wrap) step2Wrap.hidden = !wantsPublish;
   setLiveBadgeVisible(false);
 
-  if (btnHelp && helpModal) {
-    btnHelp.addEventListener('click', () => {
+  const drawerLiveHelpBtn = document.getElementById('drawerLiveHelpBtn');
+  if (drawerLiveHelpBtn && helpModal) {
+    drawerLiveHelpBtn.addEventListener('click', () => {
       helpModal.hidden = false;
+      closeSiteNavDrawer();
     });
   }
   if (btnCloseHelp && helpModal) {
@@ -586,8 +620,8 @@
       setStatus('Left room');
       updateViewerCountUI();
       renderParticipants();
-      btnToggleMic.hidden = true;
-      btnToggleCam.hidden = true;
+      if (btnToggleMic) btnToggleMic.hidden = true;
+      if (btnToggleCam) btnToggleCam.hidden = true;
       if (btnStartBroadcast) btnStartBroadcast.disabled = true;
       setLiveBadgeVisible(false);
       stopChatPolling();
@@ -617,17 +651,21 @@
   let micOn = true;
   let camOn = true;
 
-  btnToggleMic.addEventListener('click', async () => {
-    micOn = !micOn;
-    await room.localParticipant.setMicrophoneEnabled(micOn);
-    btnToggleMic.textContent = micOn ? 'Mute mic' : 'Unmute mic';
-  });
+  if (btnToggleMic) {
+    btnToggleMic.addEventListener('click', async () => {
+      micOn = !micOn;
+      await room.localParticipant.setMicrophoneEnabled(micOn);
+      applyMicButtonUi(micOn);
+    });
+  }
 
-  btnToggleCam.addEventListener('click', async () => {
-    camOn = !camOn;
-    await room.localParticipant.setCameraEnabled(camOn);
-    btnToggleCam.textContent = camOn ? 'Stop camera' : 'Start camera';
-  });
+  if (btnToggleCam) {
+    btnToggleCam.addEventListener('click', async () => {
+      camOn = !camOn;
+      await room.localParticipant.setCameraEnabled(camOn);
+      applyCamButtonUi(camOn);
+    });
+  }
 
   async function startBroadcastMediaFromUserGesture() {
     if (!wantsPublish) {
@@ -672,9 +710,11 @@
     }
 
     if (broadcastPanel) broadcastPanel.hidden = true;
-    btnToggleMic.hidden = false;
-    btnToggleCam.hidden = false;
-    setStatus('Broadcasting — preview below');
+    if (btnToggleMic) btnToggleMic.hidden = false;
+    if (btnToggleCam) btnToggleCam.hidden = false;
+    applyMicButtonUi(micOn);
+    applyCamButtonUi(camOn);
+    setStatus('');
     setLiveBadgeVisible(true);
     hasBroadcasted = true;
     void refreshBroadcastEarnings();

@@ -11,6 +11,24 @@
         <strong id="drawerWalletBalance">—</strong> tokens to spend tipping broadcasters ·
         <a href="/buy-tokens">Top up</a>
       </p>
+      <div id="livePageDrawerExtras" class="live-page-drawer-extras" hidden>
+        <p class="nav-drawer-section-label">This stream</p>
+        <button type="button" class="nav-drawer-link nav-drawer-button" id="drawerLiveHelpBtn">Live help</button>
+      </div>
+      <div id="broadcastEarningsPanel" class="nav-drawer-broadcast-earnings" hidden>
+        <p class="nav-drawer-section-label">Your tips &amp; earnings</p>
+        <p class="hint nav-drawer-hint">
+          Totals update while you broadcast. Full history:
+          <a href="/tips" target="_blank" rel="noopener">Tips &amp; earnings</a>.
+        </p>
+        <ul class="broadcast-earnings-stats nav-drawer-earnings-stats">
+          <li><span class="broadcast-earnings-k">Tip tokens (total)</span> <strong id="bcastSumTokens" class="broadcast-earnings-v">—</strong></li>
+          <li><span class="broadcast-earnings-k">Your £ from tips</span> <strong id="bcastSumGbp" class="broadcast-earnings-v">—</strong></li>
+          <li><span class="broadcast-earnings-k">Until payout</span> <strong id="bcastUntilPayout" class="broadcast-earnings-v">—</strong></li>
+        </ul>
+        <p id="bcastEarningsEligible" class="hint broadcast-earnings-eligible" hidden>Payout threshold reached — contact support to arrange payment.</p>
+        <div id="bcastRecentTips" class="bcast-recent-tips" aria-live="polite"></div>
+      </div>
       <p class="nav-drawer-section-label">Account &amp; tools</p>
       <a class="nav-drawer-link" href="/">Home</a>
       <a class="nav-drawer-link" href="/auth" id="drawerHomeLogin">Login / Sign up</a>
