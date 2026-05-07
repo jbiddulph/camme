@@ -80,3 +80,18 @@ CREATE INDEX IF NOT EXISTS ix_camme_tips_room ON camme_tips (room_name);
 CREATE UNIQUE INDEX IF NOT EXISTS uq_camme_tips_idempotency
     ON camme_tips (from_user_id, idempotency_key)
     WHERE idempotency_key IS NOT NULL;
+
+CREATE TABLE IF NOT EXISTS camme_payout_profiles (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER NOT NULL UNIQUE REFERENCES camme_users (id),
+    legal_name VARCHAR(120),
+    country_code VARCHAR(2),
+    id_verification_status VARCHAR(24) NOT NULL DEFAULT 'pending',
+    payout_method VARCHAR(24),
+    payout_destination VARCHAR(255),
+    stripe_connect_account_id VARCHAR(255),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS ix_camme_payout_profiles_user_id ON camme_payout_profiles (user_id);

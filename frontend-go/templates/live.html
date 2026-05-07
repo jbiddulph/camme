@@ -43,6 +43,15 @@
       </div>
       <p id="tipReceivedBanner" class="tip-received-banner" hidden aria-live="polite"></p>
     </header>
+    <section id="liveStudioLauncher" class="card" hidden>
+      <h2>Go live</h2>
+      <p class="hint">You are signed in. Start a public or private broadcast from here.</p>
+      <div class="actions-row">
+        <button type="button" id="btnStudioStartPublic">Broadcast Public</button>
+        <button type="button" id="btnStudioStartPrivate" class="secondary">Broadcast Private</button>
+      </div>
+      <pre id="studioLaunchResult"></pre>
+    </section>
     <p id="liveError" class="error" hidden></p>
     <section id="broadcastPanel" class="broadcast-gate">
       <h2 class="gate-title">Camera check &amp; broadcast</h2>

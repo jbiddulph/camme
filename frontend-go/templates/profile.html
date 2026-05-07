@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Profile</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  {{template "navChrome" .}}
+  <main class="container">
+    <h1>Profile &amp; payouts</h1>
+    <p id="profileGate" class="hint">Loading your profile…</p>
+    <p id="profileError" class="error" hidden></p>
+
+    <section class="card">
+      <h2>Account</h2>
+      <p class="hint">Your tipping wallet balance is shown below. Broadcaster earnings are tracked separately in Tips &amp; earnings.</p>
+      <p><strong>Token balance:</strong> <span id="profileTokenBalance">—</span></p>
+      <p><strong>Email:</strong> <span id="profileEmail">—</span></p>
+      <p><strong>ID verification:</strong> <span id="profileIdStatus">pending</span></p>
+    </section>
+
+    <section class="card">
+      <h2>Edit profile &amp; payment settings</h2>
+      <form id="profileForm" class="auth-form">
+        <label for="profileUsername">Display name</label>
+        <input id="profileUsername" name="username" required minlength="3" maxlength="40" />
+        <label for="profileLegalName">Legal name (for payouts)</label>
+        <input id="profileLegalName" name="legal_name" maxlength="120" />
+        <label for="profileCountryCode">Country code (2 letters)</label>
+        <input id="profileCountryCode" name="country_code" maxlength="2" />
+        <label for="profilePayoutMethod">Payout method</label>
+        <select id="profilePayoutMethod" name="payout_method">
+          <option value="">Select…</option>
+          <option value="stripe">Stripe</option>
+          <option value="paypal">PayPal</option>
+          <option value="paxum">Paxum / ePayService</option>
+        </select>
+        <label for="profilePayoutDestination">Payout destination (email/account)</label>
+        <input id="profilePayoutDestination" name="payout_destination" maxlength="255" />
+        <button type="submit" class="primary">Save profile</button>
+      </form>
+      <p id="profileSaveStatus" class="hint"></p>
+    </section>
+
+    <section class="card">
+      <h2>Payout rules (proposal)</h2>
+      <ul>
+        <li>1 token tipped to host = about £0.05 host earnings (before bonuses).</li>
+        <li>Minimum payout target: £50; anything below rolls over.</li>
+        <li>Schedule: 1st-15th paid around 22nd, 16th-end paid around 7th.</li>
+      </ul>
+    </section>
+  </main>
+  <script>window.CAMME_API_BASE = {{jsString .APIPrefix}};</script>
+  <script src="/static/wallet-header.js"></script>
+  <script src="/static/site-nav.js"></script>
+  <script src="/static/profile.js"></script>
+</body>
+</html>

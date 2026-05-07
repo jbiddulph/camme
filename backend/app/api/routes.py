@@ -28,6 +28,8 @@ from app.api.schemas import (
     TipItem,
     TipsEarningsResponse,
     UserMeResponse,
+    UserProfileResponse,
+    UserProfileSaveRequest,
     ViewerTokenResponse,
 )
 from app.core.config import settings
@@ -46,6 +48,7 @@ from app.models.user import User
 from app.models.broadcast_presence import BroadcastPresence
 from app.models.chat_message import ChatMessage
 from app.models.tip import Tip
+from app.models.payout_profile import PayoutProfile
 from app.services.livekit_service import issue_room_token
 from app.services.lovense_api import (
     encrypt_viewer_control_target,
@@ -132,6 +135,70 @@ def read_me(
         username=user.username,
         email=user.email,  # type: ignore[arg-type]
         token_balance=int(user.token_balance),
+    )
+
+
+def _get_or_create_payout_profile(user_id: int, db: Session) -> PayoutProfile:
+    profile = db.scalar(select(PayoutProfile).where(PayoutProfile.user_id == user_id))
+    if profile:
+        return profile
+    profile = PayoutProfile(user_id=user_id)
+    db.add(profile)
+    db.commit()
+    db.refresh(profile)
+    return profile
+
+
+@router.get('/users/me/profile', response_model=UserProfileResponse)
+def read_my_profile(
+    authorization: str | None = Header(default=None, alias='Authorization'),
+    db: Session = Depends(get_db),
+) -> UserProfileResponse:
+    user = current_user_from_auth(authorization, db, required=True)
+    assert user is not None
+    payout = _get_or_create_payout_profile(user.id, db)
+    return UserProfileResponse(
+        id=user.id,
+        username=user.username,
+        email=user.email,  # type: ignore[arg-type]
+        token_balance=int(user.token_balance),
+        id_verification_status=payout.id_verification_status,
+        payout_method=payout.payout_method,
+        payout_destination=payout.payout_destination,
+        legal_name=payout.legal_name,
+        country_code=payout.country_code,
+        stripe_connect_account_id=payout.stripe_connect_account_id,
+    )
+
+
+@router.put('/users/me/profile', response_model=UserProfileResponse)
+def update_my_profile(
+    payload: UserProfileSaveRequest,
+    authorization: str | None = Header(default=None, alias='Authorization'),
+    db: Session = Depends(get_db),
+) -> UserProfileResponse:
+    user = current_user_from_auth(authorization, db, required=True)
+    assert user is not None
+    user.username = payload.username.strip()
+    payout_row = _get_or_create_payout_profile(user.id, db)
+    payout_row.legal_name = payload.legal_name.strip() if payload.legal_name else None
+    payout_row.country_code = (payload.country_code or '').strip().upper() or None
+    payout_row.payout_method = (payload.payout_method or '').strip().lower() or None
+    payout_row.payout_destination = (payload.payout_destination or '').strip() or None
+    db.commit()
+    db.refresh(user)
+    db.refresh(payout_row)
+    return UserProfileResponse(
+        id=user.id,
+        username=user.username,
+        email=user.email,  # type: ignore[arg-type]
+        token_balance=int(user.token_balance),
+        id_verification_status=payout_row.id_verification_status,
+        payout_method=payout_row.payout_method,
+        payout_destination=payout_row.payout_destination,
+        legal_name=payout_row.legal_name,
+        country_code=payout_row.country_code,
+        stripe_connect_account_id=payout_row.stripe_connect_account_id,
     )
 
 

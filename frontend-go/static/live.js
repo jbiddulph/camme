@@ -33,6 +33,10 @@
   const btnSaveChatTranscript = document.getElementById('btnSaveChatTranscript');
   const btnDeleteAllChat = document.getElementById('btnDeleteAllChat');
   const postBroadcastStatus = document.getElementById('postBroadcastStatus');
+  const studioLauncher = document.getElementById('liveStudioLauncher');
+  const btnStudioStartPublic = document.getElementById('btnStudioStartPublic');
+  const btnStudioStartPrivate = document.getElementById('btnStudioStartPrivate');
+  const studioLaunchResult = document.getElementById('studioLaunchResult');
 
   const LK = window.LivekitClient;
   const TOKEN_KEY = 'camme_access_token';
@@ -125,11 +129,13 @@
     return v;
   }
 
-  const wsUrl = normalizeWsUrl(wsUrlRaw);
-  if (!roomName || !token || !wsUrl) {
-    showError('Missing query parameters: room, token, and livekit (WebSocket URL) are required.');
-    return;
+  function authHeaders() {
+    const appToken = localStorage.getItem(TOKEN_KEY);
+    return appToken ? { Authorization: `Bearer ${appToken}` } : {};
   }
+
+  const wsUrl = normalizeWsUrl(wsUrlRaw);
+  const hasLiveQuery = !!roomName && !!token && !!wsUrl;
 
   function showDiag(lines) {
     if (!diagEl) return;
@@ -152,6 +158,12 @@
     diagLines.push('NOTE: Camera APIs work best on http://localhost:8080 or http://127.0.0.1:8080');
   }
 
+  window.dispatchEvent(
+    new CustomEvent('camme-wallet-visibility', {
+      detail: { visible: !wantsPublish },
+    })
+  );
+
   function showError(msg) {
     errorEl.textContent = msg;
     errorEl.hidden = false;
@@ -166,6 +178,60 @@
 
   function setStatus(text) {
     if (statusEl) statusEl.textContent = text;
+  }
+
+  async function startStudioBroadcast(visibility) {
+    if (studioLaunchResult) studioLaunchResult.textContent = 'Starting broadcast…';
+    const response = await fetch(`${API_BASE}/broadcast/start?visibility=${encodeURIComponent(visibility)}`, {
+      method: 'POST',
+      headers: authHeaders(),
+    });
+    const text = await response.text();
+    let data = {};
+    try {
+      data = JSON.parse(text);
+    } catch (_) {
+      data = { detail: text };
+    }
+    if (studioLaunchResult) studioLaunchResult.textContent = JSON.stringify(data, null, 2);
+    if (!response.ok) return;
+    const ws = data.livekit_ws_url || data.livekit_url || '';
+    const q = new URLSearchParams();
+    q.set('room', data.room_name);
+    q.set('token', data.host_token);
+    q.set('livekit', ws);
+    q.set('mode', 'broadcast');
+    window.location.assign(`/live?${q.toString()}`);
+  }
+
+  if (!hasLiveQuery) {
+    const appToken = localStorage.getItem(TOKEN_KEY);
+    if (!appToken) {
+      window.location.assign('/auth');
+      return;
+    }
+    if (studioLauncher) studioLauncher.hidden = false;
+    if (broadcastPanel) broadcastPanel.hidden = true;
+    if (chatForm) chatForm.hidden = true;
+    if (chatMessagesEl) chatMessagesEl.innerHTML = '<p class="hint">Start broadcasting to enable room chat.</p>';
+    if (participantListEl) participantListEl.innerHTML = '';
+    setStatus('Studio ready');
+    if (viewerCountEl) viewerCountEl.textContent = 'Viewers: 0';
+    if (btnStudioStartPublic) {
+      btnStudioStartPublic.addEventListener('click', () => {
+        startStudioBroadcast('public').catch((err) => {
+          if (studioLaunchResult) studioLaunchResult.textContent = String(err);
+        });
+      });
+    }
+    if (btnStudioStartPrivate) {
+      btnStudioStartPrivate.addEventListener('click', () => {
+        startStudioBroadcast('private').catch((err) => {
+          if (studioLaunchResult) studioLaunchResult.textContent = String(err);
+        });
+      });
+    }
+    return;
   }
 
   function closeSiteNavDrawer() {

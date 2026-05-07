@@ -130,6 +130,11 @@ body {
   color: #a78bfa;
 }
 
+.header-logout-btn {
+  min-height: 36px;
+  padding: 0.45rem 0.85rem;
+}
+
 .nav-hamburger {
   display: none;
   flex-direction: column;
@@ -402,6 +407,23 @@ input {
   background: #0d1117;
   color: #e5e7eb;
   margin-bottom: 0.5rem;
+}
+
+select {
+  width: 100%;
+  padding: 0.6rem;
+  border-radius: 8px;
+  border: 1px solid #30363d;
+  background: #0d1117;
+  color: #e5e7eb;
+  margin-bottom: 0.5rem;
+}
+
+label {
+  display: block;
+  margin: 0.35rem 0;
+  font-size: 0.9rem;
+  color: #d1d5db;
 }
 
 button {

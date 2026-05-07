@@ -90,6 +90,38 @@ class UserMeResponse(BaseModel):
     token_balance: int
 
 
+class UserProfileUpdateRequest(BaseModel):
+    username: str = Field(min_length=3, max_length=40)
+
+
+class PayoutProfileUpdateRequest(BaseModel):
+    legal_name: str | None = Field(default=None, max_length=120)
+    country_code: str | None = Field(default=None, min_length=2, max_length=2)
+    payout_method: str | None = Field(default=None, max_length=24)
+    payout_destination: str | None = Field(default=None, max_length=255)
+
+
+class UserProfileSaveRequest(BaseModel):
+    username: str = Field(min_length=3, max_length=40)
+    legal_name: str | None = Field(default=None, max_length=120)
+    country_code: str | None = Field(default=None, min_length=2, max_length=2)
+    payout_method: str | None = Field(default=None, max_length=24)
+    payout_destination: str | None = Field(default=None, max_length=255)
+
+
+class UserProfileResponse(BaseModel):
+    id: int
+    username: str
+    email: str
+    token_balance: int
+    id_verification_status: str
+    payout_method: str | None = None
+    payout_destination: str | None = None
+    legal_name: str | None = None
+    country_code: str | None = None
+    stripe_connect_account_id: str | None = None
+
+
 class LovenseClientConfigResponse(BaseModel):
     platform: str
     sdk_enabled: bool

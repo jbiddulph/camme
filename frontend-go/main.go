@@ -253,6 +253,16 @@ func main() {
 		}
 	})
 
+	mux.HandleFunc("/profile", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+		if err := tmpl.ExecuteTemplate(w, "profile.html", LivePageData{APIPrefix: apiPrefix}); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+	})
+
 	mux.HandleFunc("/watch", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
 			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
@@ -328,11 +338,6 @@ func main() {
 	mux.HandleFunc("/live", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
 			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
-			return
-		}
-		q := r.URL.Query()
-		if q.Get("room") == "" || q.Get("token") == "" || q.Get("livekit") == "" {
-			http.Error(w, "missing required query params: room, token, livekit", http.StatusBadRequest)
 			return
 		}
 		if err := tmpl.ExecuteTemplate(w, "live.html", LivePageData{APIPrefix: apiPrefix}); err != nil {

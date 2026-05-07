@@ -9,6 +9,7 @@
   const balEl = document.getElementById('navWalletBalance');
   const drawerLine = document.getElementById('drawerWalletLine');
   const drawerBal = document.getElementById('drawerWalletBalance');
+  let forceHidden = false;
 
   function setBalanceText(v) {
     const s = v == null || v === '' ? '—' : String(v);
@@ -23,6 +24,10 @@
   }
 
   function showStrip(balance) {
+    if (forceHidden) {
+      hideStrip();
+      return;
+    }
     setBalanceText(balance);
     if (strip) strip.hidden = false;
     if (drawerLine) drawerLine.hidden = false;
@@ -60,5 +65,15 @@
 
   window.addEventListener('camme-wallet-refresh', (e) => {
     void refreshWalletHeader(e);
+  });
+
+  window.addEventListener('camme-wallet-visibility', (e) => {
+    const visible = !(e && e.detail && e.detail.visible === false);
+    forceHidden = !visible;
+    if (forceHidden) {
+      hideStrip();
+      return;
+    }
+    void refreshWalletHeader();
   });
 })();
