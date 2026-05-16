@@ -248,6 +248,22 @@
     if (statusEl) statusEl.textContent = text;
   }
 
+  function mediaDevicesUnavailableMessage() {
+    const protocol = window.location.protocol;
+    const hostname = window.location.hostname;
+    const localHost = hostname === 'localhost' || hostname === '127.0.0.1';
+    const iOS = browserLikelyNeedsMediaGesture();
+    if (!window.isSecureContext && !localHost) {
+      return iOS
+        ? 'Camera/microphone is blocked because this page is not HTTPS on your iPhone. Open the site through a real HTTPS URL, for example your production https://www.exhibitionist.me domain or a trusted HTTPS tunnel to this dev server. iPhone Safari will not expose camera/mic on a plain http:// LAN address.'
+        : 'Camera/microphone is blocked because this page is not HTTPS. Open the site through HTTPS, or use http://localhost:8080 on the same computer.';
+    }
+    if (protocol === 'https:' && localHost) {
+      return 'Camera/microphone is unavailable on this localhost URL. On an iPhone, localhost means the phone itself, not your Mac. Use the site through a real HTTPS domain or trusted HTTPS tunnel.';
+    }
+    return 'Camera/microphone is unavailable in this browser context. Open the page in Safari or Chrome directly, not inside an embedded browser, and check browser camera/microphone permissions.';
+  }
+
   async function startStudioBroadcast(visibility) {
     if (studioLaunchResult) studioLaunchResult.textContent = 'Starting broadcast…';
     const response = await fetch(`${API_BASE}/broadcast/start?visibility=${encodeURIComponent(visibility)}`, {
@@ -516,9 +532,7 @@
       if (rawWrap) rawWrap.hidden = true;
 
       if (!navigator.mediaDevices || typeof navigator.mediaDevices.getUserMedia !== 'function') {
-        showError(
-          'No getUserMedia here. Open this exact URL in Chrome or Safari (normal window), not an IDE embedded browser.'
-        );
+        showError(mediaDevicesUnavailableMessage());
         return;
       }
 
@@ -945,7 +959,7 @@
     if (rawWrap) rawWrap.hidden = true;
 
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-      showError('navigator.mediaDevices missing. Use Chrome/Safari at http://localhost:8080');
+      showError(mediaDevicesUnavailableMessage());
       showAutostartMediaPrompt();
       broadcastMediaStarting = false;
       return;

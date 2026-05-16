@@ -31,11 +31,25 @@
       line.textContent = new Date().toISOString().slice(11, 19) + ' ' + msg;
       logEl.appendChild(line);
     }
+    function mediaDevicesHelp() {
+      const host = location.hostname;
+      const localHost = host === 'localhost' || host === '127.0.0.1';
+      const iOS = /iPad|iPhone|iPod/.test(navigator.userAgent || '') || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+      if (!window.isSecureContext && !localHost) {
+        return iOS
+          ? 'getUserMedia missing — iPhone Safari requires a real HTTPS URL. Plain http:// LAN addresses cannot use camera/mic.'
+          : 'getUserMedia missing — use HTTPS, or http://localhost:8080 on the same computer.';
+      }
+      if (location.protocol === 'https:' && localHost) {
+        return 'getUserMedia missing — on iPhone, localhost means the phone itself. Use a real HTTPS domain or trusted HTTPS tunnel.';
+      }
+      return 'getUserMedia missing — open Safari/Chrome directly and check camera/microphone permissions.';
+    }
     document.getElementById('go').onclick = async () => {
       logEl.innerHTML = '';
       log('hostname=' + location.hostname + ' secureContext=' + window.isSecureContext);
       if (!navigator.mediaDevices?.getUserMedia) {
-        log('getUserMedia missing — use Chrome/Safari in a normal window at http://localhost:8080', 'bad');
+        log(mediaDevicesHelp(), 'bad');
         return;
       }
       log('Requesting camera…');
