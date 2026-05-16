@@ -704,6 +704,7 @@
 
   function attachTrack(track, participant) {
     if (track.kind === LK.Track.Kind.Audio) {
+      if (participant && participant.isLocal) return;
       const el = track.attach();
       el.style.display = 'none';
       document.body.appendChild(el);
@@ -826,6 +827,7 @@
   let switchingCamera = false;
   let broadcastMediaStarting = false;
   let broadcastMediaStarted = false;
+  let roomBroadcasterInfo = null;
 
   function showAutostartMediaPrompt() {
     if (autostartMediaPrompt) autostartMediaPrompt.hidden = false;
@@ -1357,6 +1359,18 @@
     return `${res.status} ${text.slice(0, 160)}`;
   }
 
+  async function loadRoomBroadcasterInfo() {
+    if (wantsPublish || !roomName) return null;
+    try {
+      const res = await fetch(`${API_BASE}/rooms/${encodeURIComponent(roomName)}/broadcaster`);
+      if (!res.ok) return null;
+      roomBroadcasterInfo = await res.json();
+      return roomBroadcasterInfo;
+    } catch (_) {
+      return null;
+    }
+  }
+
   function configureViewerTipPanel() {
     if (!tipPanel || wantsPublish) return;
     tipPanel.hidden = false;
@@ -1378,6 +1392,7 @@
     if (tipSignInCta) tipSignInCta.hidden = true;
     if (tipSubmitBtn) tipSubmitBtn.disabled = false;
     refreshTokenBalance();
+    loadRoomBroadcasterInfo().catch(() => {});
   }
 
   if (tipQuickRow) {
@@ -1411,7 +1426,16 @@
         });
         const text = await res.text();
         if (!res.ok) {
-          if (tipHintEl) tipHintEl.textContent = formatApiError(text, res);
+          let message = formatApiError(text, res);
+          if (message === 'Cannot tip yourself') {
+            const info = roomBroadcasterInfo || (await loadRoomBroadcasterInfo());
+            if (info && info.broadcaster_username) {
+              message =
+                `The API says this room belongs to ${info.broadcaster_username}. ` +
+                'If that is not the broadcaster on your phone, stop and restart the phone broadcast so it uses the correct room.';
+            }
+          }
+          if (tipHintEl) tipHintEl.textContent = message;
           return;
         }
         if (tipHintEl) tipHintEl.textContent = 'Tip sent — thank you!';

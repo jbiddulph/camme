@@ -47,6 +47,12 @@ class BroadcastStartResponse(BaseModel):
     private_share_url: str | None = None
 
 
+class RoomBroadcasterResponse(BaseModel):
+    room_name: str
+    broadcaster_user_id: int
+    broadcaster_username: str
+
+
 class BroadcastHeartbeatRequest(BaseModel):
     room_name: str = Field(min_length=3, max_length=80)
     thumbnail_data_url: str | None = Field(default=None, max_length=2_000_000)

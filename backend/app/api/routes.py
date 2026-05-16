@@ -23,6 +23,7 @@ from app.api.schemas import (
     LovenseViewerTargetResponse,
     RegisterRequest,
     ReportRequest,
+    RoomBroadcasterResponse,
     TipCreateRequest,
     TipInboxResponse,
     TipItem,
@@ -405,6 +406,16 @@ def tips_earnings(
 def list_rooms(db: Session = Depends(get_db)) -> dict:
     names = db.scalars(select(Room.name).order_by(Room.created_at.desc())).all()
     return {'rooms': list(names)}
+
+
+@router.get('/rooms/{room_name}/broadcaster', response_model=RoomBroadcasterResponse)
+def room_broadcaster(room_name: str, db: Session = Depends(get_db)) -> RoomBroadcasterResponse:
+    host = _broadcaster_user_for_room(room_name, db)
+    return RoomBroadcasterResponse(
+        room_name=room_name.strip(),
+        broadcaster_user_id=host.id,
+        broadcaster_username=host.username,
+    )
 
 
 @router.post('/rooms', response_model=CreateRoomResponse)
