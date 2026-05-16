@@ -44,7 +44,6 @@
   </div>
 
   <header class="site-header site-header--split">
-    <span class="nav-header-spacer" aria-hidden="true"></span>
     <a href="/" class="site-brand" aria-label="Home"><img src="/static/exhibitionist.png" alt="" class="site-logo" width="280" height="56" decoding="async" /></a>
     <div class="site-header-actions">
       <nav class="header-inline-nav" aria-label="Quick links">
@@ -58,9 +57,7 @@
       </nav>
       <a class="site-broadcast-link" href="/live?autostart=1" id="headerBroadcastLink">Broadcast</a>
       <a class="site-private-link" href="/live?autostart=1&amp;visibility=private" id="headerPrivateBroadcastLink" hidden>Private</a>
-      <a class="site-ai-link" href="https://n8n.neurohub.uk/webhook/e985d15f-b2f6-456d-be15-97e0b1544a40/chat" target="_blank" rel="noopener">Exhibitionist AI</a>
       <p id="homeAuthState" class="header-auth-status" aria-live="polite"></p>
-      <button type="button" id="headerLogoutBtn" class="secondary header-logout-btn" hidden>Log out</button>
       <button type="button" class="nav-hamburger" id="btnHomeNavToggle" aria-label="Open menu" aria-expanded="false" aria-controls="homeNavDrawer">
         <span class="nav-hamburger-bar" aria-hidden="true"></span>
         <span class="nav-hamburger-bar" aria-hidden="true"></span>
@@ -68,6 +65,10 @@
       </button>
     </div>
   </header>
+  <div class="mobile-broadcast-strip" aria-label="Broadcast actions">
+    <a class="mobile-broadcast-link" href="/live?autostart=1" id="mobileBroadcastLink">Broadcast</a>
+    <a class="mobile-broadcast-link mobile-broadcast-link--private" href="/live?autostart=1&amp;visibility=private" id="mobilePrivateBroadcastLink" hidden>Private</a>
+  </div>
   <div id="navWalletStrip" class="nav-wallet-strip" hidden role="status" aria-live="polite">
     <div class="nav-wallet-strip-inner container">
       <span class="nav-wallet-main">

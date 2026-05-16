@@ -19,6 +19,8 @@
   const headerLogoutBtn = document.getElementById('headerLogoutBtn');
   const headerBroadcastLink = document.getElementById('headerBroadcastLink');
   const headerPrivateBroadcastLink = document.getElementById('headerPrivateBroadcastLink');
+  const mobileBroadcastLink = document.getElementById('mobileBroadcastLink');
+  const mobilePrivateBroadcastLink = document.getElementById('mobilePrivateBroadcastLink');
   const API_BASE = window.CAMME_API_BASE || '/api/v1';
 
   function setHomeDrawerOpen(open) {
@@ -70,6 +72,7 @@
       if (headerProfileSep) headerProfileSep.hidden = false;
       if (headerLogoutBtn) headerLogoutBtn.hidden = false;
       if (headerPrivateBroadcastLink) headerPrivateBroadcastLink.hidden = false;
+      if (mobilePrivateBroadcastLink) mobilePrivateBroadcastLink.hidden = false;
     } else {
       const guestHtml = 'Not signed in · <a href="/auth">Sign in</a>';
       if (homeAuthState) homeAuthState.innerHTML = guestHtml;
@@ -85,6 +88,7 @@
       if (headerProfileSep) headerProfileSep.hidden = true;
       if (headerLogoutBtn) headerLogoutBtn.hidden = true;
       if (headerPrivateBroadcastLink) headerPrivateBroadcastLink.hidden = true;
+      if (mobilePrivateBroadcastLink) mobilePrivateBroadcastLink.hidden = true;
     }
     window.dispatchEvent(new Event('camme-wallet-refresh'));
   }
@@ -98,7 +102,7 @@
   });
 
   document.body.addEventListener('click', (e) => {
-    const link = e.target.closest('#headerBroadcastLink, #drawerBroadcastLink, #headerPrivateBroadcastLink, #drawerPrivateBroadcastLink');
+    const link = e.target.closest('#headerBroadcastLink, #drawerBroadcastLink, #headerPrivateBroadcastLink, #drawerPrivateBroadcastLink, #mobileBroadcastLink, #mobilePrivateBroadcastLink');
     if (!link) return;
     if (localStorage.getItem(TOKEN_KEY)) return;
     e.preventDefault();

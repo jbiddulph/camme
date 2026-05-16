@@ -21,6 +21,8 @@ const headerProfileSep = document.getElementById('headerProfileSep');
 const headerLogoutBtn = document.getElementById('headerLogoutBtn');
 const headerBroadcastLink = document.getElementById('headerBroadcastLink');
 const headerPrivateBroadcastLink = document.getElementById('headerPrivateBroadcastLink');
+const mobileBroadcastLink = document.getElementById('mobileBroadcastLink');
+const mobilePrivateBroadcastLink = document.getElementById('mobilePrivateBroadcastLink');
 
 function setHomeDrawerOpen(open) {
   if (!homeNavDrawer || !btnHomeNavToggle) return;
@@ -53,7 +55,7 @@ document.body.addEventListener('click', (e) => {
 });
 
 document.body.addEventListener('click', (e) => {
-  const link = e.target.closest('#headerBroadcastLink, #drawerBroadcastLink, #headerPrivateBroadcastLink, #drawerPrivateBroadcastLink');
+  const link = e.target.closest('#headerBroadcastLink, #drawerBroadcastLink, #headerPrivateBroadcastLink, #drawerPrivateBroadcastLink, #mobileBroadcastLink, #mobilePrivateBroadcastLink');
   if (!link) return;
   if (localStorage.getItem(TOKEN_KEY)) return;
   e.preventDefault();
@@ -96,6 +98,7 @@ async function renderHomeAuthState() {
     if (headerProfileSep) headerProfileSep.hidden = false;
     if (headerLogoutBtn) headerLogoutBtn.hidden = false;
     if (headerPrivateBroadcastLink) headerPrivateBroadcastLink.hidden = false;
+    if (mobilePrivateBroadcastLink) mobilePrivateBroadcastLink.hidden = false;
     if (btnStartBroadcastPublic) btnStartBroadcastPublic.disabled = false;
     if (btnStartBroadcastPrivate) btnStartBroadcastPrivate.disabled = false;
   } else {
@@ -113,6 +116,7 @@ async function renderHomeAuthState() {
     if (headerProfileSep) headerProfileSep.hidden = true;
     if (headerLogoutBtn) headerLogoutBtn.hidden = true;
     if (headerPrivateBroadcastLink) headerPrivateBroadcastLink.hidden = true;
+    if (mobilePrivateBroadcastLink) mobilePrivateBroadcastLink.hidden = true;
     if (btnStartBroadcastPublic) btnStartBroadcastPublic.disabled = true;
     if (btnStartBroadcastPrivate) btnStartBroadcastPrivate.disabled = true;
   }

@@ -45,6 +45,8 @@
   const privateBroadcastShareInput = document.getElementById('privateBroadcastShareInput');
   const btnCopyPrivateBroadcastLink = document.getElementById('btnCopyPrivateBroadcastLink');
   const privateBroadcastShareStatus = document.getElementById('privateBroadcastShareStatus');
+  const autostartMediaPrompt = document.getElementById('autostartMediaPrompt');
+  const btnAutostartMedia = document.getElementById('btnAutostartMedia');
 
   const LK = window.LivekitClient;
   const TOKEN_KEY = 'camme_access_token';
@@ -808,6 +810,22 @@
   let camOn = true;
   let cameraFacingMode = 'user';
   let switchingCamera = false;
+  let broadcastMediaStarting = false;
+  let broadcastMediaStarted = false;
+
+  function showAutostartMediaPrompt() {
+    if (autostartMediaPrompt) autostartMediaPrompt.hidden = false;
+  }
+
+  function hideAutostartMediaPrompt() {
+    if (autostartMediaPrompt) autostartMediaPrompt.hidden = true;
+  }
+
+  function browserLikelyNeedsMediaGesture() {
+    const ua = String(navigator.userAgent || '');
+    const iOS = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    return iOS;
+  }
 
   if (btnToggleMic) {
     btnToggleMic.addEventListener('click', async () => {
@@ -914,10 +932,13 @@
   }
 
   async function startBroadcastMediaFromUserGesture() {
+    if (broadcastMediaStarted || broadcastMediaStarting) return;
     if (!wantsPublish) {
       showError('This link is a viewer token — use the host / broadcast link for Step 2.');
       return;
     }
+    broadcastMediaStarting = true;
+    hideAutostartMediaPrompt();
     clearError();
     setStatus('Publishing to LiveKit…');
     await stopRawStream();
@@ -925,6 +946,8 @@
 
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
       showError('navigator.mediaDevices missing. Use Chrome/Safari at http://localhost:8080');
+      showAutostartMediaPrompt();
+      broadcastMediaStarting = false;
       return;
     }
 
@@ -989,7 +1012,9 @@
       console.error(err);
       const name = err && err.name ? err.name : 'Error';
       const msg = err && err.message ? err.message : String(err);
-      showError('Step 2 failed (' + name + '): ' + msg);
+      showError('Camera/microphone start failed (' + name + '): ' + msg);
+      showAutostartMediaPrompt();
+      broadcastMediaStarting = false;
       return;
     }
 
@@ -1002,6 +1027,8 @@
     applySwitchCameraUi(cameraFacingMode, false);
     setStatus('');
     setLiveBadgeVisible(true);
+    broadcastMediaStarted = true;
+    broadcastMediaStarting = false;
     hasBroadcasted = true;
     void refreshBroadcastEarnings();
 
@@ -1016,6 +1043,12 @@
 
   if (btnStartBroadcast) {
     btnStartBroadcast.addEventListener('click', () => {
+      startBroadcastMediaFromUserGesture();
+    });
+  }
+
+  if (btnAutostartMedia) {
+    btnAutostartMedia.addEventListener('click', () => {
       startBroadcastMediaFromUserGesture();
     });
   }
@@ -1059,7 +1092,12 @@
         startBroadcastEarningsPolling();
         if (autostart) {
           if (broadcastPanel) broadcastPanel.hidden = true;
-          startBroadcastMediaFromUserGesture();
+          if (browserLikelyNeedsMediaGesture()) {
+            setStatus('Tap once to start camera and microphone');
+            showAutostartMediaPrompt();
+          } else {
+            startBroadcastMediaFromUserGesture();
+          }
         }
       } else {
         setStatus('Connected · watching (viewer)');

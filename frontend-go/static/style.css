@@ -29,7 +29,7 @@ body {
 .site-header--split {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
   gap: 0.75rem 1rem;
   flex-wrap: wrap;
 }
@@ -119,8 +119,7 @@ body {
 }
 
 .site-broadcast-link,
-.site-private-link,
-.site-ai-link {
+.site-private-link {
   display: inline-flex;
   align-items: center;
   min-height: 36px;
@@ -154,11 +153,6 @@ body {
 .site-private-link:hover,
 .site-private-link:focus-visible {
   background: #e11d48;
-}
-
-.site-ai-link:hover,
-.site-ai-link:focus-visible {
-  background: #4c1d95;
 }
 
 .header-auth-status {
@@ -364,11 +358,6 @@ body {
   color: #6b7280;
 }
 
-/* Balances the hamburger column so the logo can sit visually centered on small screens */
-.nav-header-spacer {
-  display: none;
-}
-
 .home-definition {
   margin: 0 0 1.25rem;
   padding: 1rem 1.1rem;
@@ -413,12 +402,36 @@ body {
   background: #fff;
 }
 
+.mobile-broadcast-strip {
+  display: none;
+}
+
+.mobile-broadcast-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 42px;
+  padding: 0.65rem 0.9rem;
+  border-radius: 8px;
+  border: 1px solid #8b5cf6;
+  background: #7c3aed;
+  color: #ffffff;
+  font-size: 0.9rem;
+  font-weight: 700;
+  line-height: 1;
+  text-decoration: none;
+}
+
+.mobile-broadcast-link--private {
+  border-color: #fb7185;
+  background: #be123c;
+}
+
 @media (max-width: 900px) {
   .header-inline-nav,
   .header-auth-status,
   .site-broadcast-link,
-  .site-private-link,
-  .site-ai-link {
+  .site-private-link {
     display: none;
   }
 
@@ -430,20 +443,12 @@ body {
     flex-wrap: nowrap;
     align-items: center;
     gap: 0.35rem;
-    justify-content: space-between;
-  }
-
-  .nav-header-spacer {
-    display: block;
-    flex: 0 0 44px;
-    width: 44px;
-    height: 1px;
-    flex-shrink: 0;
+    justify-content: flex-start;
   }
 
   .site-header--split .site-brand {
     flex: 1 1 auto;
-    justify-content: center;
+    justify-content: flex-start;
     min-width: 0;
   }
 
@@ -459,6 +464,18 @@ body {
     min-width: 44px;
     flex-wrap: nowrap;
     justify-content: flex-end;
+  }
+
+  .mobile-broadcast-strip {
+    display: flex;
+    gap: 0.6rem;
+    padding: 0.55rem 0.75rem;
+    border-bottom: 1px solid #30363d;
+    background: #0d1117;
+  }
+
+  body#camme-live-broadcast .mobile-broadcast-strip {
+    display: none;
   }
 
   .lovense-compat-inner.container {
