@@ -56,6 +56,7 @@ type viewerTokenPayload struct {
 
 type LivePageData struct {
 	APIPrefix string
+	Embed     bool
 }
 
 func envOrDefault(key, fallback string) string {
@@ -238,7 +239,10 @@ func main() {
 			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 			return
 		}
-		if err := tmpl.ExecuteTemplate(w, "tips.html", LivePageData{APIPrefix: apiPrefix}); err != nil {
+		if err := tmpl.ExecuteTemplate(w, "tips.html", LivePageData{
+			APIPrefix: apiPrefix,
+			Embed:     r.URL.Query().Get("embed") == "1",
+		}); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 	})
@@ -248,7 +252,10 @@ func main() {
 			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 			return
 		}
-		if err := tmpl.ExecuteTemplate(w, "buy-tokens.html", LivePageData{APIPrefix: apiPrefix}); err != nil {
+		if err := tmpl.ExecuteTemplate(w, "buy-tokens.html", LivePageData{
+			APIPrefix: apiPrefix,
+			Embed:     r.URL.Query().Get("embed") == "1",
+		}); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 	})

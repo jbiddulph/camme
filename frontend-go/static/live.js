@@ -4,6 +4,9 @@
   const token = params.get('token');
   const wsUrlRaw = params.get('livekit');
   const mode = (params.get('mode') || 'watch').toLowerCase();
+  const autostart = params.get('autostart') === '1';
+  const requestedVisibility = (params.get('visibility') || 'public').toLowerCase() === 'private' ? 'private' : 'public';
+  const privateSharePath = params.get('share') || '';
 
   const statusEl = document.getElementById('liveStatus');
   const viewerCountEl = document.getElementById('viewerCount');
@@ -13,6 +16,7 @@
   const btnLeave = document.getElementById('btnLeave');
   const btnToggleMic = document.getElementById('btnToggleMic');
   const btnToggleCam = document.getElementById('btnToggleCam');
+  const btnSwitchCamera = document.getElementById('btnSwitchCamera');
   const broadcastPanel = document.getElementById('broadcastPanel');
   const btnStartBroadcast = document.getElementById('btnStartBroadcast');
   const btnRawMedia = document.getElementById('btnRawMedia');
@@ -37,6 +41,10 @@
   const btnStudioStartPublic = document.getElementById('btnStudioStartPublic');
   const btnStudioStartPrivate = document.getElementById('btnStudioStartPrivate');
   const studioLaunchResult = document.getElementById('studioLaunchResult');
+  const privateBroadcastSharePanel = document.getElementById('privateBroadcastSharePanel');
+  const privateBroadcastShareInput = document.getElementById('privateBroadcastShareInput');
+  const btnCopyPrivateBroadcastLink = document.getElementById('btnCopyPrivateBroadcastLink');
+  const privateBroadcastShareStatus = document.getElementById('privateBroadcastShareStatus');
 
   const LK = window.LivekitClient;
   const TOKEN_KEY = 'camme_access_token';
@@ -58,6 +66,7 @@
   let earningsPollTimer = null;
   /** @type {any} */
   let lovenseApi = null;
+  let pageHidden = document.hidden;
 
   const tipPanel = document.getElementById('tipPanel');
   const tipForm = document.getElementById('tipForm');
@@ -74,6 +83,29 @@
   const bcastUntilPayout = document.getElementById('bcastUntilPayout');
   const bcastEarningsEligible = document.getElementById('bcastEarningsEligible');
   const bcastRecentTips = document.getElementById('bcastRecentTips');
+  const broadcastTabs = Array.from(document.querySelectorAll('[data-broadcast-tab]'));
+  const broadcastPanels = Array.from(document.querySelectorAll('[data-broadcast-panel]'));
+
+  function setBroadcastTab(name) {
+    if (!name) return;
+    broadcastTabs.forEach((tab) => {
+      const active = tab.getAttribute('data-broadcast-tab') === name;
+      tab.classList.toggle('is-active', active);
+      tab.setAttribute('aria-selected', active ? 'true' : 'false');
+    });
+    broadcastPanels.forEach((panel) => {
+      panel.hidden = panel.getAttribute('data-broadcast-panel') !== name;
+    });
+  }
+
+  broadcastTabs.forEach((tab) => {
+    tab.addEventListener('click', (e) => {
+      const name = tab.getAttribute('data-broadcast-tab');
+      if (!name) return;
+      e.preventDefault();
+      setBroadcastTab(name);
+    });
+  });
 
   function jwtPayload(jwt) {
     const parts = String(jwt).split('.');
@@ -136,6 +168,40 @@
 
   const wsUrl = normalizeWsUrl(wsUrlRaw);
   const hasLiveQuery = !!roomName && !!token && !!wsUrl;
+
+  function absoluteShareUrl(path) {
+    if (!path) return '';
+    try {
+      return new URL(path, window.location.origin).toString();
+    } catch (_) {
+      return path;
+    }
+  }
+
+  function showPrivateBroadcastShare(path) {
+    if (!privateBroadcastSharePanel || !privateBroadcastShareInput || !path) return;
+    privateBroadcastShareInput.value = absoluteShareUrl(path);
+    privateBroadcastSharePanel.hidden = false;
+  }
+
+  if (btnCopyPrivateBroadcastLink && privateBroadcastShareInput) {
+    btnCopyPrivateBroadcastLink.addEventListener('click', async () => {
+      const value = privateBroadcastShareInput.value;
+      if (!value) return;
+      try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          await navigator.clipboard.writeText(value);
+        } else {
+          privateBroadcastShareInput.select();
+          document.execCommand('copy');
+        }
+        if (privateBroadcastShareStatus) privateBroadcastShareStatus.textContent = 'Private link copied.';
+      } catch (_) {
+        privateBroadcastShareInput.select();
+        if (privateBroadcastShareStatus) privateBroadcastShareStatus.textContent = 'Select and copy the private link.';
+      }
+    });
+  }
 
   function showDiag(lines) {
     if (!diagEl) return;
@@ -201,6 +267,9 @@
     q.set('token', data.host_token);
     q.set('livekit', ws);
     q.set('mode', 'broadcast');
+    q.set('autostart', '1');
+    q.set('visibility', visibility);
+    if (data.private_share_url) q.set('share', data.private_share_url);
     window.location.assign(`/live?${q.toString()}`);
   }
 
@@ -210,13 +279,20 @@
       window.location.assign('/auth');
       return;
     }
-    if (studioLauncher) studioLauncher.hidden = false;
+    if (studioLauncher) studioLauncher.hidden = autostart;
     if (broadcastPanel) broadcastPanel.hidden = true;
     if (chatForm) chatForm.hidden = true;
     if (chatMessagesEl) chatMessagesEl.innerHTML = '<p class="hint">Start broadcasting to enable room chat.</p>';
     if (participantListEl) participantListEl.innerHTML = '';
-    setStatus('Studio ready');
+    setStatus(autostart ? 'Starting broadcast…' : 'Studio ready');
     if (viewerCountEl) viewerCountEl.textContent = 'Viewers: 0';
+    if (autostart) {
+      startStudioBroadcast(requestedVisibility).catch((err) => {
+        if (studioLauncher) studioLauncher.hidden = false;
+        if (studioLaunchResult) studioLaunchResult.textContent = String(err);
+        showError('Could not start broadcast: ' + (err && err.message ? err.message : String(err)));
+      });
+    }
     if (btnStudioStartPublic) {
       btnStudioStartPublic.addEventListener('click', () => {
         startStudioBroadcast('public').catch((err) => {
@@ -258,6 +334,14 @@
     if (onEl) onEl.hidden = !on;
     if (offEl) offEl.hidden = on;
     btnToggleCam.setAttribute('aria-label', on ? 'Stop camera' : 'Start camera');
+  }
+
+  function applySwitchCameraUi(facingMode, busy) {
+    if (!btnSwitchCamera) return;
+    const nextLabel = facingMode === 'user' ? 'rear' : 'front';
+    btnSwitchCamera.disabled = !!busy;
+    btnSwitchCamera.setAttribute('aria-label', busy ? 'Switching camera' : `Switch to ${nextLabel} camera`);
+    btnSwitchCamera.title = busy ? 'Switching camera' : `Switch to ${nextLabel} camera`;
   }
 
   function setLiveBadgeVisible(visible) {
@@ -312,9 +396,10 @@
   function startChatPolling() {
     stopChatPolling();
     loadChatMessages().catch(() => {});
+    const intervalMs = pageHidden ? 10000 : 3000;
     chatPollTimer = setInterval(() => {
       loadChatMessages().catch(() => {});
-    }, 3000);
+    }, intervalMs);
   }
 
   function stopChatPolling() {
@@ -336,7 +421,8 @@
     if (viewerCountEl) viewerCountEl.textContent = `Viewers: ${count}`;
   }
 
-  if (step2Wrap) step2Wrap.hidden = !wantsPublish;
+  if (step2Wrap) step2Wrap.hidden = !wantsPublish || autostart;
+  if (autostart && broadcastPanel) broadcastPanel.hidden = true;
   setLiveBadgeVisible(false);
 
   const drawerLiveHelpBtn = document.getElementById('drawerLiveHelpBtn');
@@ -662,6 +748,9 @@
     .on(LK.RoomEvent.LocalTrackPublished, (pub) => {
       if (pub.track) attachTrack(pub.track, room.localParticipant);
     })
+    .on(LK.RoomEvent.LocalTrackUnpublished, (pub) => {
+      if (pub.track) detachTrack(pub.track, room.localParticipant);
+    })
     .on(LK.RoomEvent.ParticipantConnected, () => {
       updateViewerCountUI();
       renderParticipants();
@@ -688,6 +777,7 @@
       renderParticipants();
       if (btnToggleMic) btnToggleMic.hidden = true;
       if (btnToggleCam) btnToggleCam.hidden = true;
+      if (btnSwitchCamera) btnSwitchCamera.hidden = true;
       if (btnStartBroadcast) btnStartBroadcast.disabled = true;
       setLiveBadgeVisible(false);
       stopChatPolling();
@@ -716,6 +806,8 @@
 
   let micOn = true;
   let camOn = true;
+  let cameraFacingMode = 'user';
+  let switchingCamera = false;
 
   if (btnToggleMic) {
     btnToggleMic.addEventListener('click', async () => {
@@ -730,6 +822,94 @@
       camOn = !camOn;
       await room.localParticipant.setCameraEnabled(camOn);
       applyCamButtonUi(camOn);
+      if (btnSwitchCamera) btnSwitchCamera.disabled = !camOn;
+    });
+  }
+
+  function localVideoPublication() {
+    for (const pub of room.localParticipant.videoTrackPublications.values()) {
+      if (pub && pub.track) return pub;
+    }
+    return null;
+  }
+
+  function videoConstraintsForFacingMode(facingMode) {
+    return {
+      facingMode,
+      width: { ideal: 640, max: 960 },
+      height: { ideal: 360, max: 540 },
+      frameRate: { ideal: 24, max: 30 },
+    };
+  }
+
+  async function publishReplacementVideoTrack(facingMode, oldPub) {
+    if (oldPub && oldPub.track) {
+      detachTrack(oldPub.track, room.localParticipant);
+      await room.localParticipant.unpublishTrack(oldPub.track);
+      if (typeof oldPub.track.stop === 'function') oldPub.track.stop();
+    }
+    const tracks = await LK.createLocalTracks({
+      audio: false,
+      video: videoConstraintsForFacingMode(facingMode),
+    });
+    const videoTrack = tracks.find((t) => t.kind === LK.Track.Kind.Video);
+    if (!videoTrack) throw new Error('No video track returned for camera switch');
+    await room.localParticipant.publishTrack(videoTrack);
+    attachTrack(videoTrack, room.localParticipant);
+  }
+
+  async function switchCamera() {
+    if (!wantsPublish || switchingCamera) return;
+    if (!camOn) {
+      camOn = true;
+      await room.localParticipant.setCameraEnabled(true);
+      applyCamButtonUi(true);
+    }
+    if (typeof LK.createLocalTracks !== 'function') {
+      showError('Camera switching is not available in this browser.');
+      return;
+    }
+
+    const previousFacingMode = cameraFacingMode;
+    const nextFacingMode = previousFacingMode === 'user' ? 'environment' : 'user';
+    switchingCamera = true;
+    applySwitchCameraUi(previousFacingMode, true);
+    clearError();
+
+    const pub = localVideoPublication();
+    try {
+      if (pub && pub.track && typeof pub.track.restartTrack === 'function') {
+        await pub.track.restartTrack(videoConstraintsForFacingMode(nextFacingMode));
+      } else {
+        await publishReplacementVideoTrack(nextFacingMode, pub);
+      }
+      cameraFacingMode = nextFacingMode;
+    } catch (err) {
+      console.warn('Camera switch failed, retrying with browser defaults', err);
+      try {
+        const fallbackPub = localVideoPublication();
+        await publishReplacementVideoTrack(nextFacingMode, fallbackPub);
+        cameraFacingMode = nextFacingMode;
+      } catch (fallbackErr) {
+        console.error(fallbackErr);
+        const name = fallbackErr && fallbackErr.name ? fallbackErr.name : 'Error';
+        const msg = fallbackErr && fallbackErr.message ? fallbackErr.message : String(fallbackErr);
+        showError('Camera switch failed (' + name + '): ' + msg);
+      }
+    } finally {
+      switchingCamera = false;
+      applySwitchCameraUi(cameraFacingMode, false);
+    }
+  }
+
+  if (btnSwitchCamera) {
+    btnSwitchCamera.addEventListener('click', () => {
+      switchCamera().catch((err) => {
+        console.error(err);
+        showError('Camera switch failed: ' + (err && err.message ? err.message : String(err)));
+        switchingCamera = false;
+        applySwitchCameraUi(cameraFacingMode, false);
+      });
     });
   }
 
@@ -748,8 +928,47 @@
       return;
     }
 
-    try {
-      if (typeof LK.createLocalTracks === 'function') {
+    async function createTracksWithFallback() {
+      if (typeof LK.createLocalTracks !== 'function') {
+        if (typeof room.localParticipant.enableCameraAndMicrophone === 'function') {
+          await room.localParticipant.enableCameraAndMicrophone();
+          return;
+        }
+        await room.localParticipant.setCameraEnabled(true);
+        await room.localParticipant.setMicrophoneEnabled(true);
+        return;
+      }
+
+      // iPad/Safari can timeout camera startup when requesting high/default constraints.
+      // Start with lightweight constraints, then fall back to browser defaults once.
+      const lowVideo = {
+        facingMode: cameraFacingMode,
+        width: { ideal: 640, max: 960 },
+        height: { ideal: 360, max: 540 },
+        frameRate: { ideal: 24, max: 30 },
+      };
+      const audioOpts = {
+        echoCancellation: true,
+        noiseSuppression: true,
+      };
+
+      try {
+        const tracks = await LK.createLocalTracks({
+          audio: audioOpts,
+          video: lowVideo,
+        });
+        for (const t of tracks) {
+          await room.localParticipant.publishTrack(t);
+        }
+      } catch (firstErr) {
+        const firstName = firstErr && firstErr.name ? String(firstErr.name) : '';
+        const firstMsg = firstErr && firstErr.message ? String(firstErr.message) : '';
+        const shouldRetry =
+          firstName === 'AbortError' ||
+          /timeout|starting video source/i.test(firstMsg);
+        if (!shouldRetry) throw firstErr;
+
+        await new Promise((resolve) => setTimeout(resolve, 500));
         const tracks = await LK.createLocalTracks({
           audio: true,
           video: true,
@@ -757,12 +976,11 @@
         for (const t of tracks) {
           await room.localParticipant.publishTrack(t);
         }
-      } else if (typeof room.localParticipant.enableCameraAndMicrophone === 'function') {
-        await room.localParticipant.enableCameraAndMicrophone();
-      } else {
-        await room.localParticipant.setCameraEnabled(true);
-        await room.localParticipant.setMicrophoneEnabled(true);
       }
+    }
+
+    try {
+      await createTracksWithFallback();
 
       if (typeof room.startAudio === 'function') {
         await room.startAudio();
@@ -778,8 +996,10 @@
     if (broadcastPanel) broadcastPanel.hidden = true;
     if (btnToggleMic) btnToggleMic.hidden = false;
     if (btnToggleCam) btnToggleCam.hidden = false;
+    if (btnSwitchCamera) btnSwitchCamera.hidden = false;
     applyMicButtonUi(micOn);
     applyCamButtonUi(camOn);
+    applySwitchCameraUi(cameraFacingMode, false);
     setStatus('');
     setLiveBadgeVisible(true);
     hasBroadcasted = true;
@@ -831,11 +1051,16 @@
       showDiag(diagLines);
 
       if (wantsPublish) {
-        setStatus('Connected — Step 1 (camera test) anytime, then Step 2');
+        showPrivateBroadcastShare(privateSharePath);
+        setStatus(autostart ? 'Connected — starting camera…' : 'Connected — ready to publish');
         if (btnStartBroadcast) btnStartBroadcast.disabled = false;
         initLovenseForBroadcaster().catch((err) => console.warn('Lovense', err));
         startTipInboxPolling();
         startBroadcastEarningsPolling();
+        if (autostart) {
+          if (broadcastPanel) broadcastPanel.hidden = true;
+          startBroadcastMediaFromUserGesture();
+        }
       } else {
         setStatus('Connected · watching (viewer)');
         configureViewerTipPanel();
@@ -943,9 +1168,10 @@
     stopBroadcastEarningsPolling();
     if (!wantsPublish || !localStorage.getItem(TOKEN_KEY)) return;
     void refreshBroadcastEarnings();
+    const intervalMs = pageHidden ? 30000 : 12000;
     earningsPollTimer = setInterval(() => {
       void refreshBroadcastEarnings();
-    }, 12000);
+    }, intervalMs);
   }
 
   async function initLovenseForBroadcaster() {
@@ -1031,8 +1257,19 @@
     stopTipInboxPolling();
     if (!wantsPublish || !localStorage.getItem(TOKEN_KEY)) return;
     pollTipsInboxOnce();
-    tipPollTimer = setInterval(() => pollTipsInboxOnce(), 2000);
+    const intervalMs = pageHidden ? 8000 : 2000;
+    tipPollTimer = setInterval(() => pollTipsInboxOnce(), intervalMs);
   }
+
+  document.addEventListener('visibilitychange', () => {
+    const nowHidden = document.hidden;
+    if (nowHidden === pageHidden) return;
+    pageHidden = nowHidden;
+    // Re-arm pollers with the appropriate cadence for foreground/background.
+    startChatPolling();
+    startTipInboxPolling();
+    startBroadcastEarningsPolling();
+  });
 
   async function refreshTokenBalance() {
     if (!tokenBalanceEl) return;

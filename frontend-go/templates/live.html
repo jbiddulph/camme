@@ -36,12 +36,24 @@
               <svg class="live-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/><path d="M2 2l20 20"/></svg>
             </span>
           </button>
+          <button type="button" id="btnSwitchCamera" class="live-icon-btn live-icon-btn--switch-camera" hidden aria-label="Switch to rear camera" title="Switch camera">
+            <svg class="live-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 13v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h4l2-2h2l2 2h4a2 2 0 0 1 2 2v2"/><circle cx="12" cy="12" r="3"/><path d="m17 2 3 3-3 3"/><path d="M20 5h-6"/><path d="m7 22-3-3 3-3"/><path d="M4 19h6"/></svg>
+          </button>
           <button type="button" id="btnLeave" class="live-icon-btn live-icon-btn--leave" aria-label="Leave room" title="Leave">
             <svg class="live-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>
           </button>
         </div>
       </div>
       <p id="tipReceivedBanner" class="tip-received-banner" hidden aria-live="polite"></p>
+      <div id="privateBroadcastSharePanel" class="private-broadcast-share" hidden>
+        <p class="private-broadcast-share-title">Private broadcast</p>
+        <p class="hint">This stream is hidden from the public live broadcasters list. Copy this link and send it to anyone you want to view your video feed.</p>
+        <div class="private-broadcast-share-row">
+          <input id="privateBroadcastShareInput" type="text" readonly aria-label="Private broadcast viewer link" />
+          <button type="button" id="btnCopyPrivateBroadcastLink" class="secondary">Copy</button>
+        </div>
+        <p id="privateBroadcastShareStatus" class="hint" aria-live="polite"></p>
+      </div>
     </header>
     <section id="liveStudioLauncher" class="card" hidden>
       <h2>Go live</h2>
@@ -53,32 +65,17 @@
       <pre id="studioLaunchResult"></pre>
     </section>
     <p id="liveError" class="error" hidden></p>
-    <section id="broadcastPanel" class="broadcast-gate">
-      <h2 class="gate-title">Camera check &amp; broadcast</h2>
-      <ol class="gate-steps">
-        <li>
-          <p><strong>Step 1 — Browser test</strong> (always try this first). Uses your camera/mic directly — not LiveKit.</p>
-          <button type="button" id="btnRawMedia" class="primary">Test camera &amp; microphone</button>
-          <p id="rawStatus" class="hint"></p>
-          <div id="rawWrap" class="raw-wrap" hidden>
-            <video id="rawPreview" playsinline muted autoplay></video>
-            <p class="hint">
-              Green light / live picture = access works. <strong>No popup</strong> often means this origin is already <strong>Allow</strong>.
-              Black screen = blocked device, wrong browser, or OS privacy (macOS → Privacy → Camera).
-            </p>
-          </div>
-        </li>
-        <li id="step2Wrap">
-          <p><strong>Step 2 — Publish to room</strong> (host only, after status shows Connected):</p>
-          <button type="button" id="btnStartBroadcast" class="primary" disabled>Go live (LiveKit)</button>
-        </li>
-      </ol>
-    </section>
     <section class="live-main">
       <div class="live-left">
         <div id="videoGrid" class="video-grid"></div>
       </div>
-      <aside class="chat-panel">
+      <nav class="broadcast-tab-menu" aria-label="Broadcaster tools" role="tablist">
+        <a class="broadcast-tab is-active" href="#broadcastPanelChat" role="tab" aria-selected="true" aria-controls="broadcastPanelChat" data-broadcast-tab="chat">Chat</a>
+        <a class="broadcast-tab" href="/buy-tokens" role="tab" aria-selected="false" aria-controls="broadcastPanelBuy" data-broadcast-tab="buy">Buy tokens</a>
+        <a class="broadcast-tab" href="/tips" role="tab" aria-selected="false" aria-controls="broadcastPanelTips" data-broadcast-tab="tips">Tips</a>
+        <a class="broadcast-tab broadcast-tab--primary" href="https://n8n.neurohub.uk/webhook/e985d15f-b2f6-456d-be15-97e0b1544a40/chat" target="_blank" rel="noopener">AI Help</a>
+      </nav>
+      <aside class="chat-panel broadcast-tab-panel" id="broadcastPanelChat" role="tabpanel" data-broadcast-panel="chat">
         <section id="tipPanel" class="tip-panel" hidden>
           <h3>Tip the broadcaster</h3>
           <p class="hint">
@@ -104,14 +101,25 @@
         </section>
         <h2>Live chat</h2>
         <p id="chatHint" class="hint">Signed-in users post with their name. Guests post as Viewer1, Viewer2, … (no account needed).</p>
-        <div id="chatMessages" class="chat-messages" aria-live="polite"></div>
         <form id="chatForm" class="chat-form">
           <input id="chatInput" type="text" maxlength="2000" placeholder="Write a message…" autocomplete="off" autocorrect="on" enterkeyhint="send" />
-          <button type="submit" class="primary">Send</button>
+          <button type="submit" class="primary chat-send-btn" aria-label="Send chat message" title="Send">
+            <svg class="chat-send-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="m22 2-7 20-4-9-9-4Z"></path>
+              <path d="M22 2 11 13"></path>
+            </svg>
+          </button>
         </form>
+        <div id="chatMessages" class="chat-messages" aria-live="polite"></div>
         <h3>In room</h3>
         <ul id="participantList" class="participant-list"></ul>
       </aside>
+      <section class="broadcast-link-panel broadcast-tab-panel" id="broadcastPanelBuy" role="tabpanel" data-broadcast-panel="buy" hidden>
+        <iframe class="broadcast-panel-frame" src="/buy-tokens?embed=1" title="Buy tokens"></iframe>
+      </section>
+      <section class="broadcast-link-panel broadcast-tab-panel" id="broadcastPanelTips" role="tabpanel" data-broadcast-panel="tips" hidden>
+        <iframe class="broadcast-panel-frame" src="/tips?embed=1" title="Tips and earnings"></iframe>
+      </section>
     </section>
     <div id="helpModal" class="modal-backdrop" hidden>
       <div class="modal-card" role="dialog" aria-modal="true" aria-label="Live help">
@@ -119,7 +127,7 @@
           <h2>Live help</h2>
           <button type="button" id="btnCloseHelp" class="secondary">Close</button>
         </div>
-        <p>Step 1 tests camera/microphone in your browser. Step 2 starts publishing to the room.</p>
+        <p>Broadcast starts camera and microphone publishing automatically after the room connects.</p>
         <p>If camera fails: allow browser permissions, close apps using camera, and check OS privacy settings.</p>
         <p>Chat persists for this room. Signed-in users use their username; guests use Viewer1, Viewer2, … automatically.</p>
         <h3>Diagnostics</h3>

@@ -13,10 +13,14 @@ const btnHomeNavToggle = document.getElementById('btnHomeNavToggle');
 const drawerHomeLogin = document.getElementById('drawerHomeLogin');
 const drawerHomeProfile = document.getElementById('drawerHomeProfile');
 const drawerHomeLogout = document.getElementById('drawerHomeLogout');
+const drawerBroadcastLink = document.getElementById('drawerBroadcastLink');
+const drawerPrivateBroadcastLink = document.getElementById('drawerPrivateBroadcastLink');
 const headerLoginLink = document.getElementById('headerLoginLink');
 const headerProfileLink = document.getElementById('headerProfileLink');
 const headerProfileSep = document.getElementById('headerProfileSep');
 const headerLogoutBtn = document.getElementById('headerLogoutBtn');
+const headerBroadcastLink = document.getElementById('headerBroadcastLink');
+const headerPrivateBroadcastLink = document.getElementById('headerPrivateBroadcastLink');
 
 function setHomeDrawerOpen(open) {
   if (!homeNavDrawer || !btnHomeNavToggle) return;
@@ -46,6 +50,14 @@ document.body.addEventListener('click', (e) => {
   e.preventDefault();
   localStorage.removeItem(TOKEN_KEY);
   renderHomeAuthState();
+});
+
+document.body.addEventListener('click', (e) => {
+  const link = e.target.closest('#headerBroadcastLink, #drawerBroadcastLink, #headerPrivateBroadcastLink, #drawerPrivateBroadcastLink');
+  if (!link) return;
+  if (localStorage.getItem(TOKEN_KEY)) return;
+  e.preventDefault();
+  window.location.assign('/auth');
 });
 
 async function fetchUserName(token) {
@@ -78,16 +90,14 @@ async function renderHomeAuthState() {
     if (drawerHomeLogin) drawerHomeLogin.hidden = true;
     if (drawerHomeProfile) drawerHomeProfile.hidden = false;
     if (drawerHomeLogout) drawerHomeLogout.hidden = false;
+    if (drawerPrivateBroadcastLink) drawerPrivateBroadcastLink.hidden = false;
     if (headerLoginLink) headerLoginLink.hidden = true;
     if (headerProfileLink) headerProfileLink.hidden = false;
     if (headerProfileSep) headerProfileSep.hidden = false;
     if (headerLogoutBtn) headerLogoutBtn.hidden = false;
+    if (headerPrivateBroadcastLink) headerPrivateBroadcastLink.hidden = false;
     if (btnStartBroadcastPublic) btnStartBroadcastPublic.disabled = false;
     if (btnStartBroadcastPrivate) btnStartBroadcastPrivate.disabled = false;
-    if (window.location.pathname === '/') {
-      window.location.assign('/live');
-      return;
-    }
   } else {
     const guestHtml = 'Not signed in · <a href="/auth">Sign in</a>';
     if (homeAuthState) homeAuthState.innerHTML = guestHtml;
@@ -97,10 +107,12 @@ async function renderHomeAuthState() {
     if (drawerHomeLogin) drawerHomeLogin.hidden = false;
     if (drawerHomeProfile) drawerHomeProfile.hidden = true;
     if (drawerHomeLogout) drawerHomeLogout.hidden = true;
+    if (drawerPrivateBroadcastLink) drawerPrivateBroadcastLink.hidden = true;
     if (headerLoginLink) headerLoginLink.hidden = false;
     if (headerProfileLink) headerProfileLink.hidden = true;
     if (headerProfileSep) headerProfileSep.hidden = true;
     if (headerLogoutBtn) headerLogoutBtn.hidden = true;
+    if (headerPrivateBroadcastLink) headerPrivateBroadcastLink.hidden = true;
     if (btnStartBroadcastPublic) btnStartBroadcastPublic.disabled = true;
     if (btnStartBroadcastPrivate) btnStartBroadcastPrivate.disabled = true;
   }

@@ -118,6 +118,49 @@ body {
   color: #6b7280;
 }
 
+.site-broadcast-link,
+.site-private-link,
+.site-ai-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+  padding: 0.45rem 0.8rem;
+  border: 1px solid #7c3aed;
+  border-radius: 8px;
+  color: #f5f3ff;
+  background: #2e1065;
+  font-size: 0.82rem;
+  font-weight: 700;
+  line-height: 1;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.site-broadcast-link {
+  background: #7c3aed;
+  border-color: #8b5cf6;
+}
+
+.site-broadcast-link:hover,
+.site-broadcast-link:focus-visible {
+  background: #8b5cf6;
+}
+
+.site-private-link {
+  background: #be123c;
+  border-color: #fb7185;
+}
+
+.site-private-link:hover,
+.site-private-link:focus-visible {
+  background: #e11d48;
+}
+
+.site-ai-link:hover,
+.site-ai-link:focus-visible {
+  background: #4c1d95;
+}
+
 .header-auth-status {
   margin: 0;
   font-size: 0.78rem;
@@ -251,6 +294,42 @@ body {
   color: #fca5a5;
 }
 
+.nav-drawer-ai {
+  color: #f5f3ff;
+  background: #2e1065;
+  border: 1px solid #7c3aed;
+  font-weight: 700;
+}
+
+.nav-drawer-broadcast {
+  color: #ffffff;
+  background: #7c3aed;
+  border: 1px solid #8b5cf6;
+  font-weight: 700;
+}
+
+.nav-drawer-private {
+  color: #ffffff;
+  background: #be123c;
+  border: 1px solid #fb7185;
+  font-weight: 700;
+}
+
+.nav-drawer-private:hover,
+.nav-drawer-private:focus-visible {
+  background: #e11d48;
+}
+
+.nav-drawer-broadcast:hover,
+.nav-drawer-broadcast:focus-visible {
+  background: #8b5cf6;
+}
+
+.nav-drawer-ai:hover,
+.nav-drawer-ai:focus-visible {
+  background: #4c1d95;
+}
+
 .nav-drawer-status {
   margin: 0 0 0.85rem;
   padding: 0.65rem 0.6rem;
@@ -301,9 +380,45 @@ body {
   color: #d1d5db;
 }
 
+.lovense-compat-strip {
+  border-bottom: 1px solid #30363d;
+  background: #0f172a;
+  color: #e5e7eb;
+}
+
+.lovense-compat-inner.container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding-top: 0.45rem;
+  padding-bottom: 0.45rem;
+  min-height: 42px;
+}
+
+.lovense-compat-text {
+  font-size: 0.84rem;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.lovense-logo {
+  display: block;
+  width: auto;
+  height: 24px;
+  max-width: 130px;
+  object-fit: contain;
+  padding: 0.2rem 0.35rem;
+  border-radius: 6px;
+  background: #fff;
+}
+
 @media (max-width: 900px) {
   .header-inline-nav,
-  .header-auth-status {
+  .header-auth-status,
+  .site-broadcast-link,
+  .site-private-link,
+  .site-ai-link {
     display: none;
   }
 
@@ -345,6 +460,14 @@ body {
     flex-wrap: nowrap;
     justify-content: flex-end;
   }
+
+  .lovense-compat-inner.container {
+    flex-wrap: wrap;
+    gap: 0.45rem 0.65rem;
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+    text-align: center;
+  }
 }
 
 .site-brand {
@@ -378,6 +501,14 @@ body {
   max-width: 1600px;
   margin: 0 auto;
   padding: 1.25rem 1.5rem 2rem;
+}
+
+.page-embedded .container {
+  padding: 0.85rem 0.95rem 1.2rem;
+}
+
+.page-embedded h1 {
+  margin-top: 0;
 }
 
 .full-width {

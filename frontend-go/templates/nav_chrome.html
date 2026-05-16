@@ -15,6 +15,8 @@
         <p class="nav-drawer-section-label">This stream</p>
         <button type="button" class="nav-drawer-link nav-drawer-button" id="drawerLiveHelpBtn">Live help</button>
       </div>
+      <p class="nav-drawer-section-label">AI chat</p>
+      <a class="nav-drawer-link nav-drawer-ai" href="https://n8n.neurohub.uk/webhook/e985d15f-b2f6-456d-be15-97e0b1544a40/chat" target="_blank" rel="noopener">Chat with Exhibitionist AI</a>
       <div id="broadcastEarningsPanel" class="nav-drawer-broadcast-earnings" hidden>
         <p class="nav-drawer-section-label">Your tips &amp; earnings</p>
         <p class="hint nav-drawer-hint">
@@ -31,11 +33,12 @@
       </div>
       <p class="nav-drawer-section-label">Account &amp; tools</p>
       <a class="nav-drawer-link" href="/">Home</a>
+      <a class="nav-drawer-link nav-drawer-broadcast" href="/live?autostart=1" id="drawerBroadcastLink">Broadcast</a>
+      <a class="nav-drawer-link nav-drawer-private" href="/live?autostart=1&amp;visibility=private" id="drawerPrivateBroadcastLink" hidden>Private</a>
       <a class="nav-drawer-link" href="/auth" id="drawerHomeLogin">Login / Sign up</a>
       <a class="nav-drawer-link" href="/profile" id="drawerHomeProfile" hidden>Profile &amp; payouts</a>
       <a class="nav-drawer-link" href="/buy-tokens">Buy tokens</a>
       <a class="nav-drawer-link" href="/tips">Tips &amp; earnings</a>
-      <a class="nav-drawer-link" href="/cam-test">Camera test</a>
       <button type="button" class="nav-drawer-link nav-drawer-button" id="drawerHomeLogout" hidden>Log out</button>
     </nav>
   </div>
@@ -52,9 +55,10 @@
         <a href="/buy-tokens">Buy tokens</a>
         <span class="header-inline-sep" aria-hidden="true">·</span>
         <a href="/tips">Tips</a>
-        <span class="header-inline-sep" aria-hidden="true">·</span>
-        <a href="/cam-test">Cam test</a>
       </nav>
+      <a class="site-broadcast-link" href="/live?autostart=1" id="headerBroadcastLink">Broadcast</a>
+      <a class="site-private-link" href="/live?autostart=1&amp;visibility=private" id="headerPrivateBroadcastLink" hidden>Private</a>
+      <a class="site-ai-link" href="https://n8n.neurohub.uk/webhook/e985d15f-b2f6-456d-be15-97e0b1544a40/chat" target="_blank" rel="noopener">Exhibitionist AI</a>
       <p id="homeAuthState" class="header-auth-status" aria-live="polite"></p>
       <button type="button" id="headerLogoutBtn" class="secondary header-logout-btn" hidden>Log out</button>
       <button type="button" class="nav-hamburger" id="btnHomeNavToggle" aria-label="Open menu" aria-expanded="false" aria-controls="homeNavDrawer">
@@ -74,6 +78,12 @@
         Use these on live streams only. Hosts earn £ per tipped token (see
         <a href="/tips">Tips &amp; earnings</a>); your price per token includes platform fees.
       </span>
+    </div>
+  </div>
+  <div class="lovense-compat-strip" role="note" aria-label="Lovense compatibility">
+    <div class="lovense-compat-inner container">
+      <span class="lovense-compat-text">exhibitionist.me is Lovense compatible</span>
+      <img class="lovense-logo" src="/static/lovense-logo.svg" alt="Lovense" width="130" height="24" loading="lazy" decoding="async" />
     </div>
   </div>
 {{end}}

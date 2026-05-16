@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Exhibitionist.me (Camme) — User Guide</title>
+<style>
+body { font-family: Georgia, serif; font-size: 12pt; line-height: 1.45; color: #111; max-width: 42em; margin: 2em auto; }
+h1 { font-size: 22pt; border-bottom: 1px solid #ccc; padding-bottom: 0.3em; }
+h2 { font-size: 15pt; margin-top: 1.4em; page-break-before: auto; }
+h3 { font-size: 13pt; margin-top: 1em; }
+p, li { margin: 0.45em 0; }
+ul, ol { margin: 0.35em 0 0.35em 1.2em; }
+.note { background: #f5f5f5; border-left: 4px solid #666; padding: 0.6em 1em; margin: 1em 0; }
+.operator { background: #eef6ff; border-left: 4px solid #2563eb; padding: 0.6em 1em; margin: 1em 0; }
+code { font-family: Menlo, Consolas, monospace; font-size: 10.5pt; }
+table { border-collapse: collapse; width: 100%; margin: 0.8em 0; font-size: 11pt; }
+th, td { border: 1px solid #ccc; padding: 0.35em 0.5em; text-align: left; }
+th { background: #eee; }
+.footer { margin-top: 2.5em; font-size: 10pt; color: #555; }
+</style>
+</head>
+<body>
+
+<h1>Exhibitionist.me (Camme) — User Guide</h1>
+<p>This guide explains how to use the Camme web app (branded as <strong>Exhibitionist.me</strong>) as a <strong>viewer</strong> or <strong>broadcaster</strong>, including how <strong>Lovense</strong> interactive toys work when tips are sent.</p>
+
+<h2>1. Getting started</h2>
+<h3>1.1 What you need</h3>
+<ul>
+<li>A modern browser (Safari or Chrome on desktop and iPad).</li>
+<li>A stable internet connection.</li>
+<li>For live video: allow <strong>camera</strong> and <strong>microphone</strong> when prompted (broadcasters only).</li>
+</ul>
+
+<h3>1.2 Open the site</h3>
+<p>Visit your Exhibitionist.me URL (local development is often <code>http://localhost:8080</code>). The logo in the top-left links home.</p>
+
+<h3>1.3 Create an account or sign in</h3>
+<ul>
+<li>Go to <strong>Login / Sign up</strong>.</li>
+<li>Use the tabs: <strong>Login</strong> first, then <strong>Sign up</strong> if needed.</li>
+<li>After login, your session is stored in the browser (token used for API calls).</li>
+</ul>
+
+<h2>2. Home page</h2>
+<ul>
+<li><strong>Live broadcasters</strong> — choose <strong>Watch live</strong> to join as a viewer.</li>
+<li><strong>Broadcast Public / Private</strong> — signed-in hosts start a stream and go to the live room.</li>
+<li><strong>Camera test</strong> (<code>/cam-test</code>) — test camera/mic without LiveKit if video fails.</li>
+</ul>
+<p class="note">Signed-in users may be redirected to <code>/live</code> for the studio flow.</p>
+
+<h2>3. Profile, tokens, and payouts</h2>
+<h3>3.1 Profile</h3>
+<p>Menu → <strong>Profile &amp; payouts</strong> (<code>/profile</code>): display name, payout-related fields, ID verification status (as configured by the operator).</p>
+
+<h3>3.2 Tipping wallet vs broadcaster earnings</h3>
+<ul>
+<li><strong>Tokens</strong> — bought on <strong>Buy tokens</strong> (<code>/buy-tokens</code>, Stripe) or starter balance; spent when you <strong>tip</strong> a host.</li>
+<li><strong>£ earnings</strong> — hosts accrue value when tipped (typically about <strong>£0.05 per tipped token</strong>). Details: <strong>Tips &amp; earnings</strong> (<code>/tips</code>).</li>
+</ul>
+<p class="note">The top bar about “tokens to spend tipping” is mainly for <strong>viewers</strong>. It may be hidden while you are <strong>broadcasting</strong>.</p>
+
+<h3>3.3 Payouts (overview)</h3>
+<ul>
+<li>Minimum payout threshold (often <strong>£50</strong>) and pay periods depend on operator settings.</li>
+<li>Identity verification and complete payment details are required before payouts.</li>
+</ul>
+
+<h2>4. Watching a live stream</h2>
+<ul>
+<li>From home, <strong>Watch live</strong>, or use a private watch link.</li>
+<li><strong>Chat:</strong> signed-in users use their username; guests appear as <strong>Viewer1</strong>, <strong>Viewer2</strong>, etc.</li>
+<li><strong>Tips:</strong> signed-in viewers use the tip panel; tokens are deducted from your wallet; the host may receive Lovense vibration if they use compatible toys (see Section 8).</li>
+</ul>
+
+<h2>5. Broadcasting</h2>
+<ol>
+<li><strong>Step 1 — Browser test</strong> on the live page: confirm camera/mic preview works.</li>
+<li>Wait until status shows <strong>Connected</strong>.</li>
+<li><strong>Step 2 — Go live (LiveKit)</strong> to publish video and audio.</li>
+<li>Use mute/camera controls or <strong>Leave</strong> to exit; hosts may save or delete room chat afterward.</li>
+</ol>
+<p class="note">On iPad, if Step 2 times out, close other apps using the camera and retry Step 1.</p>
+
+<h2>6. Menu reference</h2>
+<ul>
+<li><strong>Home</strong>, <strong>Login / Sign up</strong>, <strong>Profile &amp; payouts</strong>, <strong>Buy tokens</strong>, <strong>Tips &amp; earnings</strong>, <strong>Camera test</strong>, <strong>Log out</strong>.</li>
+</ul>
+
+<h2>7. Privacy and support</h2>
+<ul>
+<li>Log out on shared devices. Report abuse via in-product reporting where available.</li>
+<li>Payment or verification issues: contact Exhibitionist.me operator support.</li>
+</ul>
+
+<h2>8. Lovense interactive toys — how it works</h2>
+<p>Exhibitionist.me can connect <strong>Lovense</strong> sex toys to the tipping system so that when viewers tip during a live show, the <strong>broadcaster’s toy may vibrate</strong> automatically. This uses Lovense’s official <strong>Standard / Basic SDK</strong> integration — not a separate Lovense login with the same name as your Camme username.</p>
+
+<h3>8.1 Who needs what</h3>
+<table>
+<tr><th>Role</th><th>Lovense setup</th></tr>
+<tr><td><strong>Viewer (tipper)</strong></td><td>No Lovense app or account required. Tip with tokens as usual; vibration is handled on the host side.</td></tr>
+<tr><td><strong>Broadcaster (model)</strong></td><td>Compatible Lovense toy + <strong>Lovense Connect</strong> running on the same computer/browser session used for <code>/live</code> broadcast. Toy must be linked to the site’s Lovense developer integration.</td></tr>
+<tr><td><strong>Site operator</strong></td><td>Lovense Developer account, developer token, and platform (website) name configured on the API server (see Section 9).</td></tr>
+</table>
+
+<h3>8.2 End-to-end flow (what happens when someone tips)</h3>
+<ol>
+<li>A signed-in viewer sends a <strong>tip</strong> (token amount) on the live page for that room.</li>
+<li>The server records the tip, deducts the viewer’s <strong>token_balance</strong>, and stores vibration parameters derived from the tip size.</li>
+<li>The <strong>broadcaster’s browser</strong> polls the tip <strong>inbox</strong> every few seconds while hosting.</li>
+<li>When a new tip appears, the page shows a “tip received” banner and calls the Lovense SDK command <strong>sendToyCommand</strong> with strength and duration.</li>
+<li>If Lovense Connect has the toy connected under the correct integration, the toy vibrates for that duration.</li>
+</ol>
+<p class="note">Tips do <strong>not</strong> go through Lovense’s payment system. Money/tokens are handled by Exhibitionist.me (Stripe for purchases; internal token ledger for tips). Lovense is only used for <strong>device control</strong>.</p>
+
+<h3>8.3 How the broadcaster is linked to Lovense</h3>
+<ul>
+<li>When you go live as a host, the site requests a short-lived <strong>auth token</strong> from Lovense’s API.</li>
+<li>Lovense identifies you by your <strong>Camme user ID</strong> (not your display name). Your display name is sent as a label only.</li>
+<li>The live page loads Lovense’s <strong>Basic SDK</strong> in the browser and connects using that token and the operator’s <strong>platform name</strong> (website name from the Lovense developer dashboard).</li>
+<li>Your toy must be active in <strong>Lovense Connect</strong> while broadcasting so the SDK can reach it.</li>
+</ul>
+<p>You do <strong>not</strong> need your Camme username to match a Lovense nickname. What matters is: same developer app, same platform name, Connect running, and you logged into Camme as the host on that broadcast.</p>
+
+<h3>8.4 Tip amount → vibration (typical behaviour)</h3>
+<p>The server maps each tip’s token amount to vibration <strong>strength</strong> and <strong>time (seconds)</strong>. Larger tips generally produce stronger and/or longer vibration, within capped limits. Example logic used by the platform:</p>
+<ul>
+<li><strong>Strength:</strong> roughly 1–20, based on tip size (e.g. about 1 strength per 50 tokens, minimum 1).</li>
+<li><strong>Duration:</strong> roughly 2–120 seconds (e.g. about 1 second per 25 tokens, minimum 2 seconds).</li>
+</ul>
+<p>Exact values are set by the running API; hosts see tip totals under <strong>Tips &amp; earnings</strong>.</p>
+
+<h3>8.5 Broadcaster checklist (before going live with Lovense)</h3>
+<ol>
+<li>Install <strong>Lovense Connect</strong> on the device you use to broadcast.</li>
+<li>Pair your Lovense toy in Connect and confirm it works in the Connect app.</li>
+<li>Log in to Exhibitionist.me and open your <strong>live broadcast</strong> page (host / broadcast link).</li>
+<li>Complete camera Step 1 and Step 2 (<strong>Go live</strong>) as usual.</li>
+<li>Leave Connect running in the background; do not let another app steal the Bluetooth/USB connection.</li>
+<li>Ask a test viewer (or second account) to send a <strong>small tip</strong>; you should see the tip banner and feel vibration within a few seconds.</li>
+</ol>
+
+<h3>8.6 Viewer checklist (tipping with Lovense-enabled hosts)</h3>
+<ul>
+<li>Sign in and ensure you have enough <strong>tokens</strong> (<strong>Buy tokens</strong> if needed).</li>
+<li>Join the host’s live room as a viewer.</li>
+<li>Use the <strong>Tip</strong> panel: quick amounts or custom value → <strong>Send tip</strong>.</li>
+<li>No extra Lovense steps are required on your side.</li>
+</ul>
+
+<h3>8.7 Troubleshooting Lovense</h3>
+<table>
+<tr><th>Problem</th><th>What to try</th></tr>
+<tr><td>No vibration on tips</td><td>Confirm Connect is open, toy connected, host is actually <strong>broadcasting</strong> (not only watching). Retry after reconnecting the toy in Connect.</td></tr>
+<tr><td>Tips work but never vibrate</td><td>Operator may not have Lovense credentials on the API server, or <strong>platform name</strong> in config does not exactly match the Lovense developer dashboard website name.</td></tr>
+<tr><td>SDK / Lovense errors in browser console</td><td>Host must be logged in; API must return <code>sdk_enabled: true</code> from client-config. Check network to <code>api.lovense-api.com</code>.</td></tr>
+<tr><td>Intermittent vibration</td><td>Tip inbox is polled every ~2 seconds in foreground; delays are normal. Background browser tabs poll slower.</td></tr>
+<tr><td>Wrong person’s toy reacts</td><td>Each Camme user ID is separate; only the logged-in host on that broadcast session should have Connect paired for that integration.</td></tr>
+</table>
+
+<h3>8.8 What Lovense features are <em>not</em> in this guide’s product</h3>
+<ul>
+<li><strong>Viewer remote control</strong> via Lovense Viewer JS (encrypted “start control” from viewers) — optional AES keys exist on the server for advanced integrations but are not part of the standard live page UI today.</li>
+<li>Full Lovense Cam Extension / third-party cam site plugins — this site uses the <strong>Basic SDK + in-app tips</strong> pattern instead.</li>
+<li>Lovense handling payments — all purchases and tips are on Exhibitionist.me; Lovense does not process your card or tokens.</li>
+</ul>
+
+<h3>8.9 Compatible products</h3>
+<p>Any Lovense device that works with <strong>Lovense Connect</strong> and your operator’s Lovense developer application should work, subject to Lovense’s own device and firmware support. The site does not maintain a separate hardware list; refer to <a href="https://www.lovense.com">lovense.com</a> and Lovense developer documentation for current models.</p>
+
+<h2>9. For site operators — Lovense credentials (technical)</h2>
+<p class="operator">This section is for whoever deploys the <strong>FastAPI API</strong> (e.g. Heroku <code>camme-api</code>). Secrets must never be committed to git or shared in user support chats.</p>
+<h3>9.1 Environment variables</h3>
+<table>
+<tr><th>Variable</th><th>Required</th><th>Purpose</th></tr>
+<tr><td><code>LOVENSE_TOKEN</code></td><td>Yes</td><td>Developer token from <a href="https://developer.lovense.com">developer.lovense.com</a> (server-side only).</td></tr>
+<tr><td><code>LOVENSE_PLATFORM</code></td><td>Yes</td><td><strong>Website Name</strong> exactly as shown in the Lovense developer dashboard.</td></tr>
+<tr><td><code>LOVENSE_AES_KEY</code></td><td>Optional</td><td>AES key for Viewer JS <code>startControl</code> (advanced).</td></tr>
+<tr><td><code>LOVENSE_AES_IV</code></td><td>Optional</td><td>16-byte IV for same (advanced).</td></tr>
+</table>
+<h3>9.2 API endpoints (prefix <code>/api/v1</code>)</h3>
+<ul>
+<li><code>GET /lovense/client-config</code> — returns whether SDK is enabled and platform name.</li>
+<li><code>POST /lovense/auth-token</code> — broadcaster JWT required; returns Lovense <code>authToken</code> for the Basic SDK.</li>
+<li><code>POST /lovense/viewer-control-target</code> — optional encrypted target for Viewer JS (advanced).</li>
+</ul>
+<h3>9.3 Verify configuration</h3>
+<ol>
+<li>Set vars on the API host and restart the process.</li>
+<li><code>GET /api/v1/lovense/client-config</code> should show <code>"sdk_enabled": true</code>.</li>
+<li>Host broadcasts on <code>/live</code>; send a test tip; confirm inbox + vibration.</li>
+</ol>
+<p>Related token economy vars: <code>INITIAL_TOKEN_BALANCE</code>, <code>TOKEN_VALUE_GBP</code>, <code>PAYOUT_MINIMUM_GBP</code>. Database: <code>camme_tips</code> stores <code>vibrate_strength</code> and <code>vibrate_seconds</code> per tip.</p>
+
+<p class="footer">Exhibitionist.me (Camme) user guide — includes Lovense Standard Basic SDK integration. For developers, see project README.md.</p>
+
+</body>
+</html>

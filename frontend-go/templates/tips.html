@@ -6,8 +6,10 @@
   <title>Tips &amp; earnings</title>
   <link rel="stylesheet" href="/static/style.css">
 </head>
-<body>
+<body{{if .Embed}} class="page-embedded"{{end}}>
+  {{if not .Embed}}
   {{template "navChrome" .}}
+  {{end}}
 
   <main class="container full-width tips-page">
     <h1>Tips &amp; earnings</h1>

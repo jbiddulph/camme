@@ -6,8 +6,10 @@
   <title>Buy tokens</title>
   <link rel="stylesheet" href="/static/style.css">
 </head>
-<body>
+<body{{if .Embed}} class="page-embedded"{{end}}>
+  {{if not .Embed}}
   {{template "navChrome" .}}
+  {{end}}
 
   <main class="container full-width buy-tokens-page">
     <h1>Buy tokens</h1>
