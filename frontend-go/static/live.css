@@ -830,6 +830,74 @@ body#camme-live-broadcast .chat-form button {
   border-radius: 0;
 }
 
+/* Broadcaster desktop/tablet landscape (> iPad mini 768px): video left 75%, chat/tools right 25% */
+@media (min-width: 769px) {
+  body#camme-live-broadcast .live-main {
+    grid-template-columns: minmax(0, 3fr) minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr);
+    align-items: stretch;
+    gap: 0;
+    min-height: calc(100dvh - 7rem);
+  }
+
+  body#camme-live-broadcast .live-left {
+    grid-column: 1;
+    grid-row: 1 / -1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  body#camme-live-broadcast .video-grid {
+    flex: 1 1 auto;
+    min-height: 0;
+    height: 100%;
+  }
+
+  body#camme-live-broadcast .video-tile {
+    height: 100%;
+    min-height: 280px;
+    aspect-ratio: auto;
+  }
+
+  body#camme-live-broadcast .broadcast-tab-menu {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  body#camme-live-broadcast .broadcast-tab-panel,
+  body#camme-live-broadcast .broadcast-link-panel {
+    grid-column: 2;
+    grid-row: 2;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  body#camme-live-broadcast .chat-panel {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    height: 100%;
+  }
+
+  body#camme-live-broadcast .chat-messages {
+    flex: 1 1 auto;
+    min-height: 0;
+    max-height: none;
+  }
+
+  body#camme-live-broadcast .broadcast-link-panel:not([hidden]) {
+    display: flex;
+    flex-direction: column;
+  }
+
+  body#camme-live-broadcast .broadcast-panel-frame {
+    flex: 1 1 auto;
+    min-height: 0;
+    height: 100%;
+  }
+}
+
 @media (max-width: 768px) {
   body#camme-live-broadcast .live-wrap {
     padding: 0;
